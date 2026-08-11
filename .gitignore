@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local state and logs
+.DS_Store
+*.log
+.vercel/
+.idea/
+.vscode/
+
+# Database state, exports, and dumps
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.dump
+*.sql
+backups/

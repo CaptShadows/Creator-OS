@@ -234,6 +234,31 @@ Overview should be a projection over canonical domain state, not a separate sour
 
 The initial workflow interview established the major operational pain points: no structured filming plan, ideas/scripts living in memory, briefs/deadlines buried in messages, no deliverable tracker, daily sample checking, and a need to track payments, commission, campaigns, and product opportunities from one workspace.
 
+## Local development
+
+Requirements: Node.js 22 or newer and npm.
+
+```bash
+git clone https://github.com/CaptShadows/Creator-OS.git
+cd Creator-OS
+npm ci
+npm run dev
+```
+
+Open `http://localhost:3000`. The application boots without an environment file. Copy `.env.example` to `.env.local` only when optional local configuration is needed.
+
+Run the full foundation checks before opening a pull request:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+Run the production build locally with `npm start` after `npm run build`. Deployment verification can call `GET /api/health`; a healthy process returns HTTP 200 with `{"status":"healthy"}` and service metadata.
+
+See [architectural decisions](docs/DECISIONS.md) for foundation constraints future issues must preserve.
+
 ## Security
 
 This repository must never contain credentials, access tokens, session cookies, API secrets, private keys, production database dumps, or exported private platform data.
