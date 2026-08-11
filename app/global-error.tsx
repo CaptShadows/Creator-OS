@@ -1,0 +1,2 @@
+"use client";
+export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <html lang="en"><body><main style={{maxWidth: 640, margin: "15vh auto", padding: 24, fontFamily: "Arial, sans-serif", textAlign: "center"}}><h1>Creator OS couldn&apos;t load.</h1><p>Please try once more. If the problem continues, check the service health and logs.</p><button type="button" onClick={reset} style={{padding: "12px 18px"}}>Try again</button></main></body></html>; }
