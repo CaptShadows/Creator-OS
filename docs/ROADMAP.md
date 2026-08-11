@@ -1,89 +1,303 @@
 # Creator OS Roadmap
 
-This roadmap is intentionally capability-based. Dates should be added only when there is a real delivery constraint.
+This roadmap is capability-based. Dates should be added only when there is a real delivery constraint.
 
-## Phase 0 — Validate workflows
+## Phase 0 — Workflow validation
 
-- Confirm actual daily/weekly creator workflow
-- Validate ten-page navigation
-- Define content statuses from real usage
-- Identify campaign workflow
-- Identify which metrics are genuinely useful
-- Decide production host/network architecture
+Completed enough to move forward.
 
-Exit condition: we can describe how Tonya will use Creator OS during a normal week without inventing steps solely for the software.
+Validated pain points:
 
-## Phase 1 — Reliable local core
+- filming priorities currently live in memory
+- spontaneous ideas/scripts live in memory
+- brand briefs/deadlines live in messages
+- deliverable completion is not centrally tracked
+- completed brand videos are moved into Google Drive until posted
+- samples require daily manual checking
+- campaign payment tracking is needed
+- revenue/commission should be surfaced where possible
+- morning context is scattered across samples, commissions, campaigns, deadlines, and trending products
+
+Primary jobs Creator OS should eliminate:
+
+1. Track samples and required videos
+2. Build a usable filming plan
+3. Surface trending/up-and-coming product opportunities
+
+Validated product north star:
+
+**Open Creator OS -> see exactly what matters today -> do the work -> Creator OS records/derives progress.**
+
+## Phase 1 — Reliable creator operations core
+
+### Foundation
 
 - Application shell
-- Authentication
-- PostgreSQL + migrations
-- Mobile/tablet/desktop/wall profiles
-- Overview foundation
-- Content CRUD
-- Content Calendar
-- PlatformAccount model
-- Manual metric entry/import foundation
-- Backup and restore procedure
-- Deployment/rollback SOP
+- Workflow-first navigation
+- Authentication/session/trusted-device foundation
+- PostgreSQL + Drizzle migrations
+- Mobile/tablet/desktop/wall client profiles
+- Core health checks
+- Audit/event history where operationally useful
+- `.env.example` and secret-handling policy
 
-Exit condition: Creator OS is useful even with zero live platform APIs.
+### Core domain models
 
-## Phase 2 — Campaign and commerce workflow
+Implement skeletal but correct models for:
 
-- Brands
-- Campaigns
-- Deliverables
-- Products
-- Affiliate mappings
-- Amazon-oriented view
-- ShopMy-oriented view
-- Tribe-oriented workflow
+- User
+- PlatformAccount
+- Content
+- Publication
+- Brand
+- Campaign
+- Deliverable
+- Product
+- ProductPlatformListing
+- Sample
+- Compensation
+- Payment
+- AssetReference
+- Integration/sync state
 
-Exit condition: campaign obligations and commerce content can be managed without external spreadsheets for the supported workflow.
+Campaign/product/sample/payment entities are Phase 1 because they directly determine what content gets created and what requires attention.
 
-## Phase 3 — Platform analytics adapters
+### Overview / Morning Command Center
 
-Implement integrations one at a time based on value and API feasibility.
+- What Needs Attention projection
+- Film Today queue
+- due/overdue deliverables
+- sample status summary
+- ready-to-post content
+- upcoming campaign deadlines
+- outstanding payment summary
+- platform/sync health
+- revenue/commission snapshot when data exists
 
-Candidate order must be decided after API/access research, not assumed from platform popularity.
+Overview must query canonical domain state; it must not own duplicate task/progress data.
 
-Each adapter requires:
+### Create / Content workflow
 
-- integration contract
-- authentication/reconnect SOP
-- sync health
-- stale-data behavior
-- tests
-- manual fallback
+- ultra-low-friction `+ Idea` capture
+- script/hook/caption workspace
+- content create/edit/archive flows
+- content lifecycle support
+- link content to campaigns, deliverables, products, and publications
+- manual state controls where automation is not reliable
+- resilient draft/autosave behavior
 
-## Phase 4 — Cross-platform intelligence
+Working content lifecycle:
 
-- historical trends
-- content performance comparisons
-- pillar/format analysis
-- account growth comparisons
-- publication performance across destinations
+```text
+Idea -> Scripting -> Ready to Film -> Filmed -> Edited -> Ready to Post -> Posted
+```
 
-## Phase 5 — Assisted intelligence
+Do not require a manual click for every internal state if it can be derived reliably.
 
-Only after enough reliable first-party history exists:
+### Calendar
 
-- content gap suggestions
-- performance-informed ideas
+- month/week views
+- content and campaign deadlines
+- planned film dates
+- publication schedules
+- filters without duplicating underlying records
+
+### Campaigns
+
+- campaign create/edit/archive
+- brief/reference storage
+- deadlines
+- multiple deliverables
+- deliverable completion progress such as 3/5
+- compensation components
+- payment state
+- links to products/content/publications/assets
+
+### Samples
+
+- requested/pending/approved/shipped/arrived/content-needed/completed tracking
+- surface samples needing action
+- link sample to canonical Product
+
+### Reliability before first production use
+
+- tested backup procedure
+- tested restore procedure
+- deployment SOP
+- rollback SOP
+- troubleshooting paths for core app/database/integration/client failures
+
+**Exit condition:** Creator OS is useful for planning, content, campaigns, samples, and payments with zero live platform APIs, and can be restored after failure using documented procedures.
+
+## Phase 2 — Commerce and asset workflow
+
+- richer Product management
+- platform product/listing mappings
+- affiliate links/commission metadata
+- Amazon-oriented product/content workflow
+- ShopMy-oriented product workflow
+- Tribe-oriented opportunity/campaign workflow
+- TikTok Shop commerce capability under TikTok
+- Google Drive or approved asset-provider integration
+- expose linked briefs/raw/final assets through Creator OS
+- keep large binary storage external unless a real requirement changes that decision
+
+**Exit condition:** Creator OS owns the operational context for products, campaign assets, and commerce work without forcing repeated app/message hunting.
+
+## Phase 3 — Platform adapters and live ingestion
+
+Implement one adapter at a time based on value and API feasibility. Do not build all seven in parallel.
+
+For every adapter:
+
+- document authentication method
+- document scopes/permissions
+- document token expiry/refresh behavior
+- document rate limits
+- document account/publication/product/commerce data availability
+- document historical limitations
+- implement behind internal contract
+- record last attempt / last success / error state
+- implement stale-data behavior
+- provide manual/import fallback where practical
+- write reconnect SOP
+- add regression tests
+
+Platform backlog:
+
+- Instagram
+- Facebook
+- TikTok (multiple accounts)
+- YouTube
+- Amazon Influencer / Storefront
+- ShopMy
+- Tribe
+
+Viral Vue remains explicitly out of scope.
+
+**Exit condition:** Live integrations reduce context switching but can fail individually without taking down creator operations.
+
+## Phase 4 — Opportunity and product discovery
+
+Goal: surface useful, trustworthy opportunities without inventing fake trend intelligence.
+
+- ingest official/approved trend or opportunity sources where available
+- sample opportunities
+- campaigns/opportunities
+- high-commission products
+- seasonal opportunities
+- trending/up-and-coming products
+- source/provenance for every signal
+- niche/performance ranking only after enough reliable data exists
+
+Do not use brittle scraping or fabricated trend scores as a core dependency.
+
+**Exit condition:** Product discovery saves meaningful manual checking and every recommendation can explain where its signal came from.
+
+## Phase 5 — Cross-platform analytics and intelligence
+
+- historical account growth
+- publication performance history
+- cross-platform content comparisons
+- content pillar analysis
+- format analysis
+- posting-frequency analysis
+- top-content reporting
+- platform growth comparison
+- campaign performance summaries
+- commerce/revenue/commission views where supported
+- data-quality and staleness indicators
+
+Stats should answer decisions such as "what changed?" rather than merely show vanity metrics.
+
+## Phase 6 — Wall display experience
+
+- dedicated Wall composition using shared data/routes
+- large touch targets
+- Film Today
+- upcoming deadlines
+- sample status
+- campaign progress
+- ready-to-post content
+- platform/sync health
+- glanceable KPIs/revenue where useful
+- minimal typing
+- wall-client recovery SOP
+- hardware-specific burn-in/always-on considerations
+
+**Exit condition:** The wall answers "What do I need to do today?" without behaving like a stretched desktop dashboard.
+
+## Phase 7 — Assisted intelligence
+
+Only after Creator OS has enough reliable first-party operational/performance history.
+
+- content-gap suggestions
+- performance-informed content ideas
+- filming-plan assistance
 - campaign deadline assistance
-- reusable hook/script assistance
+- reusable hook/script/caption assistance
+- brand/content context store
 - optional AI integration through narrow server-side contracts
+- explicit review/edit flow before generated material becomes canonical data
 
-AI should consume Creator OS data; it should not become the authoritative store for creator operations.
+**Rule:** AI consumes Creator OS data. AI does not become the authoritative datastore.
+
+## Ongoing operating requirements
+
+These apply throughout development:
+
+- keep troubleshooting docs current
+- add undocumented recovery actions to SOPs
+- record known-good production versions
+- verify backups through restore tests
+- isolate platform failures
+- preserve user-created data during outages
+- prefer archive/recovery over destructive deletion
+- keep secrets out of client code and Git
+- document infrastructure dependencies
+- enforce a manual-entry budget
+- avoid requiring information Creator OS already has or can reliably derive
+
+## Context-switch target
+
+Target at least 80% of normal creator operations inside Creator OS.
+
+Expected 100% internal targets where practical:
+
+- morning planning
+- idea capture
+- filming plan
+- campaign tracking
+- sample tracking
+- payment tracking
+- content calendar
+- scripts/captions
+
+External specialist handoffs are acceptable for tasks such as advanced video/image editing and binary storage.
+
+## Current working navigation
+
+- Overview
+- Calendar
+- Create
+- Campaigns
+- Products
+- Analytics
+- Platforms
+
+Platforms contains specialized views for Instagram, Facebook, TikTok, YouTube, Amazon, ShopMy, and Tribe.
 
 ## Anti-roadmap
 
-Do not prioritize these without a demonstrated need:
+Do not prioritize these without demonstrated need:
 
 - public multi-tenant SaaS
-- complicated role/permission systems
-- every platform API at once
-- automated posting everywhere
+- complex enterprise RBAC
+- all seven platform integrations simultaneously
+- automated posting everywhere simply because an API exists
+- recreating Canva/CapCut/Google Drive poorly inside Creator OS
 - monorepo extraction solely for architectural aesthetics
 - high availability infrastructure for a single-user LAN app
+- platform-specific duplicate Content/Product models
+- brittle scraping as a core dependency
+- AI features before reliable data/workflows exist
