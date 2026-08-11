@@ -2,9 +2,9 @@
 
 This document defines the initial conceptual model. It is not yet a migration specification.
 
-## Rule: content is not a platform post
+## Rule: workflow first, platform second
 
-A piece of content exists independently from where it is published.
+Creator OS is not seven separate platform databases. A piece of content exists independently from where it is published, a product may appear across multiple platforms, and a campaign may require multiple deliverables.
 
 ```text
 Content
@@ -60,17 +60,18 @@ Candidate fields:
 - script
 - caption
 - notes
-- campaignId
+- priority
+- plannedFilmDate
 - createdAt
 - updatedAt
 
-Candidate workflow:
+Candidate lifecycle:
 
 ```text
-idea -> scripted -> filmed -> editing -> ready -> scheduled -> published -> archived
+idea -> scripting -> ready_to_film -> filmed -> edited -> ready_to_post -> posted -> archived
 ```
 
-Do not hard-code this workflow until actual usage validates it.
+These are domain states, not a requirement for manual advancement through every state.
 
 ### Publication
 
@@ -91,6 +92,146 @@ Candidate fields:
 - createdAt
 - updatedAt
 
+### Brand
+
+Canonical brand identity used across campaigns and products.
+
+### Campaign
+
+Represents a commercial or partnership engagement.
+
+Candidate fields:
+
+- id
+- brandId
+- name
+- status
+- startDate
+- dueDate
+- briefReference
+- notes
+- createdAt
+- updatedAt
+
+Campaign should not store all compensation in one opaque field. Compensation/payment components should be modeled separately.
+
+### Deliverable
+
+A required campaign output.
+
+Candidate fields:
+
+- id
+- campaignId
+- title
+- status
+- dueDate
+- contentId
+- requiredPlatformId or platform requirement metadata
+- notes
+- createdAt
+- updatedAt
+
+A campaign may have multiple deliverables. Progress such as 3/5 complete is derived from deliverable state.
+
+### Product
+
+Canonical product identity independent of platform.
+
+Candidate fields:
+
+- id
+- brandId
+- name
+- category
+- notes
+- active
+- createdAt
+- updatedAt
+
+Platform-specific listings, affiliate URLs, IDs, and commission metadata should be child mappings rather than separate canonical product tables.
+
+### ProductPlatformListing
+
+Maps Product to a platform-specific listing/opportunity.
+
+Candidate fields:
+
+- id
+- productId
+- platformAccountId or platform
+- externalProductId
+- externalUrl
+- affiliateUrl
+- commission metadata
+- status
+- metadata
+
+### Sample
+
+Tracks product/sample acquisition and required follow-up.
+
+Candidate lifecycle:
+
+```text
+requested -> pending/approved -> shipped -> arrived -> content_needed -> completed
+```
+
+Candidate fields:
+
+- id
+- productId
+- sourcePlatform
+- status
+- requestedAt
+- approvedAt
+- shippedAt
+- receivedAt
+- trackingReference
+- notes
+- createdAt
+- updatedAt
+
+The exact statuses should remain adjustable as real workflow evolves.
+
+### Compensation
+
+Represents one compensation component for a campaign.
+
+Examples:
+
+- fixed fee
+- commission percentage
+- gifted product
+- performance incentive
+
+Candidate fields:
+
+- id
+- campaignId
+- type
+- agreedAmount
+- commissionRate
+- expectedPaymentDate
+- notes
+
+### Payment
+
+Tracks money expected/received against compensation or campaign work.
+
+Candidate fields:
+
+- id
+- campaignId
+- compensationId
+- status
+- expectedAmount
+- receivedAmount
+- dueAt
+- receivedAt
+- paymentReference
+- notes
+
 ### AccountMetricSnapshot
 
 Historical observation of account-level metrics.
@@ -104,6 +245,7 @@ Candidate fields:
 - followers
 - views
 - engagement values
+- revenue/commission where account-level semantics are valid
 - raw/extended metrics JSON
 - contentHash
 
@@ -129,35 +271,54 @@ Candidate fields:
 
 Not every platform supports every metric. Null/absent metrics are valid.
 
-### Brand
+## Derived operational views
 
-Canonical brand identity used across campaigns and products.
+Operational queues should be projections over canonical state rather than separately maintained collections.
 
-### Campaign
+### Film Today
 
-Represents a commercial or partnership engagement.
+Potential inputs:
 
-Candidate fields:
+- unfinished campaign deliverables
+- approaching deadlines
+- received samples requiring content
+- planned organic content
+- explicitly prioritized ideas
+- content already scripted/ready to film
+
+### Needs Attention
+
+Potential inputs:
+
+- overdue deliverables
+- campaigns nearing deadline
+- samples awaiting action
+- outstanding payments
+- failed/stale integrations
+- ready-to-post content
+
+### Campaign completion
+
+Derived from campaign deliverable counts/statuses, not a manually maintained progress percentage.
+
+## Asset references
+
+Creator OS should model asset references without necessarily storing large binary media itself.
+
+Potential entity:
+
+### AssetReference
 
 - id
-- brandId
-- name
-- status
-- startDate
-- dueDate
-- compensation
-- notes
-- brief reference
+- ownerUserId
+- contentId / campaignId / deliverableId as applicable
+- type
+- provider
+- externalId/path
+- displayName
+- metadata
 
-### Deliverable
-
-A required campaign output. A deliverable may link to Content when creative work begins.
-
-### Product
-
-Represents an item promoted through Amazon, TikTok Shop, ShopMy, Tribe, brand campaigns, or other approved channels.
-
-A Product should not be owned by one platform. Platform-specific listings/affiliate links should be child records or mappings.
+Google Drive or another approved storage system may remain the binary store.
 
 ## Metrics strategy
 
@@ -169,16 +330,17 @@ Store provenance:
 - when it was captured
 - which external object it represents
 - whether the snapshot is complete
+- whether the displayed value is stale
 
 ## Deletion strategy
 
-User-created content should favor recoverable/archive semantics over destructive deletion. External records may require tombstones or sync markers when APIs report deletion.
+User-created content, campaigns, products, scripts, and payment records should favor recoverable/archive semantics over destructive deletion. External records may require tombstones or sync markers when APIs report deletion.
 
 ## Open questions
 
-- Exact campaign/payment model
-- Affiliate commission granularity
-- Whether assets/B-roll need first-class records in v1
-- Which content statuses Tonya actually uses
-- Whether manual metric entry is needed for every platform
-- Retention policy for high-frequency metric snapshots
+- Exact payment/commission reconciliation detail
+- Which sample statuses best match the source platforms
+- Whether raw/edited video assets need richer first-class metadata in v1
+- How frequently metric snapshots should be retained
+- Which trend/opportunity data sources are reliable enough to ingest
+- Which content state transitions can be safely derived automatically
