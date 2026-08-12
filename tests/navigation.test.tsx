@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app-shell";
+import { ClientProfileProvider } from "@/components/client-profile-provider";
 import { navigation } from "@/lib/navigation";
 
 vi.mock("next/link", () => ({ default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a href={String(href)} {...props}>{children}</a> }));
@@ -12,9 +13,9 @@ describe("Creator OS navigation", () => {
   });
 
   it("renders the application shell and its content", () => {
-    render(<AppShell><h1>Current workspace</h1></AppShell>);
+    render(<ClientProfileProvider><AppShell><h1>Current workspace</h1></AppShell></ClientProfileProvider>);
     expect(screen.getByRole("heading", { name: "Current workspace" })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Creator OS overview" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Creator OS overview" })).toHaveLength(3);
     expect(screen.getAllByRole("link", { name: "Overview" })[0]).toHaveAttribute("aria-current", "page");
   });
 });

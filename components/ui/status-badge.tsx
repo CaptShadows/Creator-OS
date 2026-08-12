@@ -1,0 +1,2 @@
+const tones = { neutral: "bg-[var(--accent-soft)] text-[var(--accent-strong)]", success: "bg-[var(--color-success-soft)] text-[var(--color-success-text)]", warning: "bg-[var(--color-warning-soft)] text-[var(--color-warning-text)]", info: "bg-[var(--secondary-accent)] text-[var(--color-info-text)]" } as const;
+export function StatusBadge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: keyof typeof tones }) { return <span className={`inline-flex min-h-7 items-center border border-current/15 px-2.5 text-xs font-bold ${tones[tone]}`}>{children}</span>; }

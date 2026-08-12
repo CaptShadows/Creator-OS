@@ -54,6 +54,7 @@ Treat as an integration incident, not an application outage.
 2. Check selected profile/override.
 3. Check browser-specific state.
 4. Verify server response before changing backend code.
+5. Reset the browser-only profile override by selecting `Auto`, or remove only the `creator-os-client-profile` localStorage key. Do not clear cookies unless authentication itself is the problem.
 
 ### E. Wall display is broken but other clients work
 
