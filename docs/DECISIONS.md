@@ -10,3 +10,11 @@
 - **No premature persistence:** `db/` is an explicit boundary only. PostgreSQL and Drizzle arrive with the dedicated persistence issue.
 
 Future work must keep external integrations behind adapters, preserve workflow operation during integration failure, and treat Overview as a projection rather than a source of truth.
+
+## Visual system
+
+- Creator OS uses a restrained feminine-luxury direction: warm blush, rose, cream, warm white, charcoal, and sparing champagne or powder-blue accents.
+- Raw palette values and semantic aliases are centralized in `app/globals.css`. Components should consume semantic tokens rather than introduce repeated hex values.
+- Serif typography is reserved for selected brand and display moments. Operational labels, navigation, forms, and dense data remain in the sans-serif UI stack.
+- Borders stay thin, shadows restrained, corners modest, and rose states purposeful. Avoid neon, cyberpunk, glitter, purple-heavy, medical-office, or overly rounded styling.
+- Readability, accessible interaction states, responsive behavior, and workflow speed take priority over decoration.
