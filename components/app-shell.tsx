@@ -22,6 +22,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
             <NavigationLink key={item.href} href={item.href} label={item.label} />
           ))}
         </nav>
+        <Link href="/create#quick-idea" className="primary-action mt-5 inline-flex min-h-12 items-center justify-center px-4 text-sm font-bold">+ Idea</Link>
         <div className="mt-auto border-t border-[var(--line)] pt-5">
           <p className="eyebrow text-[0.625rem]">Tonya Wellness</p>
           <p className="mt-2 max-w-44 text-xs leading-5 text-[var(--muted)]">A calmer way to run the creator business.</p>

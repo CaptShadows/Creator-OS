@@ -1,6 +1,6 @@
 # Creator OS Data Model
 
-This document describes the implemented canonical model in `db/schema/domain.ts` and migration `db/migrations/0001_sad_tag.sql`.
+This document describes the implemented canonical model in `db/schema/domain.ts` and the migrations under `db/migrations`.
 
 ## Rule: workflow first, platform second
 
@@ -56,6 +56,7 @@ Candidate fields:
 - contentType
 - contentPillar
 - status
+- statusBeforeArchive
 - hook
 - script
 - caption
@@ -65,13 +66,15 @@ Candidate fields:
 - createdAt
 - updatedAt
 
-Candidate lifecycle:
+Implemented lifecycle:
 
 ```text
-idea -> scripting -> ready_to_film -> filmed -> edited -> ready_to_post -> posted -> archived
+idea -> scripting -> ready_to_film -> filmed -> edited -> ready_to_post -> posted
 ```
 
-These are domain states, not a requirement for manual advancement through every state.
+Normal transitions move one step forward or backward. Archive is an explicit action outside the normal lifecycle; `statusBeforeArchive` records the prior state so recovery returns the item to useful work rather than resetting it to Idea.
+
+Content can optionally link to campaigns and products through owner-scoped many-to-many join tables. Platform associations are represented by draft Publication rows, preserving the rule that content exists independently of distribution.
 
 ### Publication
 
