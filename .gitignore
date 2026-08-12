@@ -26,4 +26,5 @@ coverage/
 *.sqlite3
 *.dump
 *.sql
+!db/migrations/*.sql
 backups/

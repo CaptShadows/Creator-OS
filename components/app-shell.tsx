@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NavigationLink } from "@/components/navigation-link";
 import { navigation } from "@/lib/navigation";
+import { logoutAction } from "@/app/auth-actions";
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -16,6 +17,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
         <div className="mt-auto border-t border-[var(--line)] pt-5">
           <p className="eyebrow text-[0.625rem]">Tonya Wellness</p>
           <p className="mt-2 max-w-44 text-xs leading-5 text-[var(--muted)]">A calmer way to run the creator business.</p>
+          <form action={logoutAction}><button className="mt-4 min-h-11 text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent-strong)]" type="submit">Sign out</button></form>
         </div>
       </aside>
 

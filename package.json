@@ -12,13 +12,20 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx db/scripts/migrate.ts",
+    "db:check": "tsx db/scripts/check.ts",
+    "db:bootstrap-owner": "tsx db/scripts/bootstrap-owner.ts"
   },
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
     "next": "16.3.0",
+    "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",
@@ -27,10 +34,12 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.0",
     "eslint-config-next": "16.3.0",
     "jsdom": "^27.1.0",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.3",
     "vitest": "^4.0.8"
   }

@@ -9,8 +9,8 @@ This is the operational entry point when Creator OS is deployed. Procedures shou
 | Initial deployment | Build a known-good host from scratch | Planned |
 | Standard update | Safely deploy a new version | Planned |
 | Rollback | Return to last known-good application version | Planned |
-| Database backup | Produce a verified backup | Planned |
-| Database restore | Restore authoritative data | Planned |
+| Database backup | Produce a verified backup | Procedure defined; schedule pending |
+| Database restore | Restore authoritative data | Test procedure defined; host rehearsal pending |
 | Secret rotation | Replace compromised/expired credentials | Planned |
 | Platform reconnect | Recover an expired/revoked integration | Planned |
 | Integration outage | Operate with stale/unavailable platform data | Planned |

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { formatOperationalDate } from "@/lib/format-date";
+import { requireOwner } from "@/lib/auth/server";
 
 export const metadata: Metadata = { title: "Overview" };
 export const dynamic = "force-dynamic";
@@ -10,7 +11,8 @@ const priorities = [
   { title: "Ready to post", description: "Finished content waiting for distribution will land here.", tone: "blue" },
 ] as const;
 
-export default function OverviewPage() {
+export default async function OverviewPage() {
+  await requireOwner();
   return (
     <section className="space-y-8">
       <header className="overview-hero rounded-2xl px-6 py-8 sm:px-9 sm:py-10 lg:px-12 lg:py-12">

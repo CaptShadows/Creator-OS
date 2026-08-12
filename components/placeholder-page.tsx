@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireOwner } from "@/lib/auth/server";
 
 type PlaceholderPageProps = {
   eyebrow: string;
@@ -7,7 +8,8 @@ type PlaceholderPageProps = {
   focus: readonly string[];
 };
 
-export function PlaceholderPage({ eyebrow, title, description, focus }: PlaceholderPageProps) {
+export async function PlaceholderPage({ eyebrow, title, description, focus }: PlaceholderPageProps) {
+  await requireOwner();
   return (
     <section>
       <p className="eyebrow">{eyebrow}</p>
