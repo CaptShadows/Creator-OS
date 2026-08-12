@@ -158,6 +158,8 @@ Candidate fields:
 
 Platform-specific listings, affiliate URLs, IDs, and commission metadata should be child mappings rather than separate canonical product tables.
 
+Implemented Product behavior keeps one owner-scoped canonical record with any number of platform listing children. Products can be created independently or inline during quick Sample capture. Archive is recoverable and does not delete Sample or listing history.
+
 ### ProductPlatformListing
 
 Maps Product to a platform-specific listing/opportunity.
@@ -200,6 +202,8 @@ Candidate fields:
 - updatedAt
 
 The exact statuses should remain adjustable as real workflow evolves.
+
+The implemented lifecycle advances explicitly through adjacent states. Reaching Approved, Shipped, and Arrived records the corresponding timestamp when it is first known. Samples also support expected delivery and tracking references plus optional Content and Campaign links. The `Needs content` filter queries `content_needed` directly so Overview can later derive the same action state without another checklist.
 
 ### Compensation
 
