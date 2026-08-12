@@ -62,6 +62,15 @@ Do not make the user manually advance every internal state if reliable system si
 
 Where practical, long-form user input should be resilient to navigation mistakes, refreshes, and transient failures. Autosave behavior must be deliberate and testable.
 
+The Create editor implements this contract as follows:
+
+- PostgreSQL is authoritative; browser storage is never a second content database.
+- Changed editor fields save after an 800 ms idle period.
+- Each save includes the version (`updatedAt`) that the editor loaded. A conflicting server update returns `409` and is never silently overwritten.
+- `localStorage` holds only an unsynced recovery buffer, scoped by both owner and content ID. A successful save clears it.
+- A failed or offline save remains visibly pending and is retried after the next edit or reload rather than being presented as synced.
+- Quick capture requires only one idea field. Type, pillar, associations, and long-form copy remain optional.
+
 ### 8. Make destructive actions obvious
 
 Archive should usually be preferred over delete. Permanent deletion should be rare and clearly differentiated.

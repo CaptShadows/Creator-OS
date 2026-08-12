@@ -1,4 +1,4 @@
-import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./foundation";
 
@@ -36,6 +36,7 @@ export const contents = pgTable("contents", {
   contentType: text("content_type"),
   contentPillar: text("content_pillar"),
   status: contentStatus("status").default("idea").notNull(),
+  statusBeforeArchive: contentStatus("status_before_archive"),
   hook: text("hook"), script: text("script"), caption: text("caption"), notes: text("notes"),
   priority: integer("priority").default(0).notNull(),
   plannedFilmAt: timestamp("planned_film_at", { withTimezone: true }),
@@ -116,8 +117,20 @@ export const integrationStates = pgTable("integration_states", {
   integration: text("integration").notNull(), status: text("status").default("not_configured").notNull(), lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }), lastSuccessAt: timestamp("last_success_at", { withTimezone: true }), lastError: text("last_error"), metadata: metadata(), ...timestamps,
 }, (table) => [uniqueIndex("integration_states_owner_integration_account_unique").on(table.ownerUserId, table.integration, table.platformAccountId), index("integration_states_owner_status_idx").on(table.ownerUserId, table.status)]);
 
+export const contentCampaigns = pgTable("content_campaigns", {
+  ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contentId: uuid("content_id").notNull().references(() => contents.id, { onDelete: "cascade" }),
+  campaignId: uuid("campaign_id").notNull().references(() => campaigns.id, { onDelete: "cascade" }),
+}, (table) => [primaryKey({ columns: [table.contentId, table.campaignId] }), index("content_campaigns_owner_idx").on(table.ownerUserId)]);
+
+export const contentProducts = pgTable("content_products", {
+  ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contentId: uuid("content_id").notNull().references(() => contents.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+}, (table) => [primaryKey({ columns: [table.contentId, table.productId] }), index("content_products_owner_idx").on(table.ownerUserId)]);
+
 export const platformAccountsRelations = relations(platformAccounts, ({ many }) => ({ publications: many(publications), productListings: many(productPlatformListings) }));
-export const contentsRelations = relations(contents, ({ many }) => ({ publications: many(publications), deliverables: many(deliverables), assets: many(assetReferences) }));
+export const contentsRelations = relations(contents, ({ many }) => ({ publications: many(publications), deliverables: many(deliverables), assets: many(assetReferences), campaignLinks: many(contentCampaigns), productLinks: many(contentProducts) }));
 export const publicationsRelations = relations(publications, ({ one }) => ({ content: one(contents, { fields: [publications.contentId], references: [contents.id] }), platformAccount: one(platformAccounts, { fields: [publications.platformAccountId], references: [platformAccounts.id] }) }));
 export const campaignsRelations = relations(campaigns, ({ one, many }) => ({ brand: one(brands, { fields: [campaigns.brandId], references: [brands.id] }), deliverables: many(deliverables), compensations: many(compensations), payments: many(payments) }));
 export const deliverablesRelations = relations(deliverables, ({ one }) => ({ campaign: one(campaigns, { fields: [deliverables.campaignId], references: [campaigns.id] }), content: one(contents, { fields: [deliverables.contentId], references: [contents.id] }) }));
