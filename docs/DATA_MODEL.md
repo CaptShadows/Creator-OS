@@ -118,6 +118,8 @@ Candidate fields:
 
 Campaign should not store all compensation in one opaque field. Compensation/payment components should be modeled separately.
 
+Implemented Campaign behavior is progressively completable: Brand and name create the record, while dates, status, notes, and a brief reference remain optional. Archiving uses `archivedAt`, so recovery preserves the campaign and all child records. Campaign due dates remain canonical and queryable for later Overview and Calendar work.
+
 ### Deliverable
 
 A required campaign output.
@@ -136,6 +138,8 @@ Candidate fields:
 - updatedAt
 
 A campaign may have multiple deliverables. Progress such as 3/5 complete is derived from deliverable state.
+
+Deliverables can link to an existing Content item or create a minimal new Idea. Their completion status is tracked independently, but Content lifecycle is not copied into Campaign state.
 
 ### Product
 
@@ -234,6 +238,8 @@ Candidate fields:
 - receivedAt
 - paymentReference
 - notes
+
+Each receipt is a separate Payment row, allowing partial and final receipts without mutating history. Fixed outstanding compensation is calculated per component as `max(agreed amount - received payments, 0)`, then summed. Expected Payment rows communicate timing and overdue state but are not subtracted as receipts, preventing double-counting. Commission-only components remain percentage terms until a payable amount is known.
 
 ### AccountMetricSnapshot
 
