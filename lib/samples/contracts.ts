@@ -1,0 +1,11 @@
+import { z } from "zod";
+import { sampleStatusSchema } from "@/lib/domain/contracts";
+const optionalText=z.string().trim().max(10000).optional().transform(v=>v||null);
+const optionalDate=z.string().optional().transform(v=>v?new Date(`${v}T12:00:00.000Z`):null);
+const optionalId=z.string().optional().transform(v=>v||null).pipe(z.uuid().nullable());
+export const quickSampleSchema=z.object({productId:optionalId,newProductName:optionalText,sourcePlatform:optionalText}).refine(v=>Boolean(v.productId||v.newProductName),{message:"Choose a product or enter a new one"}).refine(v=>!(v.productId&&v.newProductName),{message:"Choose an existing product or create a new one"});
+export const createProductSchema=z.object({name:z.string().trim().min(1).max(300)});
+export const productEditSchema=z.object({productId:z.uuid(),name:z.string().trim().min(1).max(300),category:optionalText,notes:optionalText,active:z.enum(["true","false"]).transform(v=>v==="true")});
+export const listingSchema=z.object({productId:z.uuid(),platform:z.string().trim().min(1).max(100),externalProductId:optionalText,externalUrl:optionalText,affiliateUrl:optionalText});
+export const sampleEditSchema=z.object({sampleId:z.uuid(),sourcePlatform:optionalText,expectedDeliveryAt:optionalDate,trackingReference:optionalText,contentId:optionalId,campaignId:optionalId,notes:optionalText});
+export const sampleTransitionSchema=z.object({sampleId:z.uuid(),to:sampleStatusSchema});
