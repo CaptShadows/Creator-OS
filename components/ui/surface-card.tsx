@@ -1,0 +1,1 @@
+export function SurfaceCard({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={`luxury-card rounded-xl p-5 ${className}`}>{children}</section>; }

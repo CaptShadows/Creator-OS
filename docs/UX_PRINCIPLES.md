@@ -87,6 +87,19 @@ Wall design should favor:
 
 The wall should answer: **What do I need to do today?**
 
+### Implemented client profiles
+
+The shared shell implements four presentation-only profiles:
+
+- **Mobile:** one-column content, compact header, horizontally scrollable bottom navigation, and touch-sized controls.
+- **Tablet:** two-column workspace density with the compact navigation model.
+- **Desktop:** persistent workflow sidebar and full operational density.
+- **Wall:** top-level horizontal navigation, larger typography/touch targets, three-column glanceable layout, and reduced secondary copy.
+
+Automatic selection uses viewport width (`<640` Mobile, `<1024` Tablet, `<1920` Desktop, otherwise Wall). A browser-local Display profile control can override Auto for testing or a dedicated device. The preference is stored only in `localStorage` under `creator-os-client-profile`; it is presentation state, never creator/business data, and it does not change backend behavior.
+
+All subsequent UI work should use the primitives under `components/ui` for headers, surfaces, statuses, lists, tables, empty states, errors, and touch actions. Profile-specific density should use the shared profile classes rather than branching application services or queries.
+
 ### 11. Do not optimize for developer cleverness
 
 A simpler implementation that is easier to diagnose and recover is preferable to an elegant abstraction that increases operational uncertainty.

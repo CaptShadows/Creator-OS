@@ -1,5 +1,8 @@
-import Link from "next/link";
 import { requireOwner } from "@/lib/auth/server";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { SurfaceCard } from "@/components/ui/surface-card";
+import { TouchButton } from "@/components/ui/touch-button";
 
 type PlaceholderPageProps = {
   eyebrow: string;
@@ -11,20 +14,18 @@ type PlaceholderPageProps = {
 export async function PlaceholderPage({ eyebrow, title, description, focus }: PlaceholderPageProps) {
   await requireOwner();
   return (
-    <section>
-      <p className="eyebrow">{eyebrow}</p>
-      <h1 className="display-heading mt-3 max-w-3xl text-4xl sm:text-5xl">{title}</h1>
-      <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">{description}</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <section className="space-y-8">
+      <PageHeader eyebrow={eyebrow} title={title} description={description} />
+      <div className="profile-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {focus.map((item) => (
-          <article key={item} className="luxury-card min-h-32 rounded-xl p-5">
+          <SurfaceCard key={item} className="min-h-32">
             <div className="mb-4 h-px w-9 bg-[var(--metal-accent)]" />
             <h2 className="font-semibold">{item}</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">This workspace arrives in a later Creator OS phase.</p>
-          </article>
+            <p className="profile-density-secondary mt-2 text-sm leading-6 text-[var(--muted)]">This workspace arrives in a later Creator OS phase.</p>
+          </SurfaceCard>
         ))}
       </div>
-      <Link href="/" className="primary-action mt-8 inline-flex min-h-12 items-center rounded-lg px-5 text-sm font-bold">Back to today</Link>
+      <EmptyState title="No records yet" description="This route is ready for its feature workflow; no placeholder business data has been invented." action={<TouchButton href="/">Back to today</TouchButton>} />
     </section>
   );
 }

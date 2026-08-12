@@ -10,6 +10,11 @@
   --color-champagne: #c99a8d;
   --color-powder-blue: #dcebf2;
   --color-powder-blue-strong: #9cbfce;
+  --color-success-soft: #e4efe8;
+  --color-success-text: #315a40;
+  --color-warning-soft: #f5ead8;
+  --color-warning-text: #745522;
+  --color-info-text: #315463;
   --color-text: #211d1e;
   --color-text-muted: #756a6d;
   --color-border: #e9dddf;
@@ -45,6 +50,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 button, a { -webkit-tap-highlight-color: transparent; }
@@ -150,3 +156,61 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 .primary-action:hover { background: var(--foreground); }
+
+/* Client profiles are presentation state only. Media queries provide the
+   automatic baseline; the data attribute applies a per-browser override. */
+.app-shell { display: block; }
+.app-sidebar, .wall-header { display: none; }
+.app-mobile-header, .app-bottom-nav { display: flex; }
+.app-main { padding: 1.75rem 1.25rem 7rem; }
+
+@media (min-width: 640px) {
+  .app-main { padding-inline: 2rem; }
+}
+
+@media (min-width: 1024px) {
+  .app-shell { display: grid; grid-template-columns: 17.5rem minmax(0, 1fr); }
+  .app-sidebar { display: flex; flex-direction: column; }
+  .app-mobile-header, .app-bottom-nav { display: none; }
+  .app-main { padding: 3rem; padding-bottom: 3rem; }
+}
+
+html[data-client-profile="mobile"] .app-shell,
+html[data-client-profile="tablet"] .app-shell { display: block; }
+html[data-client-profile="mobile"] .app-sidebar,
+html[data-client-profile="tablet"] .app-sidebar,
+html[data-client-profile="mobile"] .wall-header,
+html[data-client-profile="tablet"] .wall-header { display: none; }
+html[data-client-profile="mobile"] .app-mobile-header,
+html[data-client-profile="tablet"] .app-mobile-header,
+html[data-client-profile="mobile"] .app-bottom-nav,
+html[data-client-profile="tablet"] .app-bottom-nav { display: flex; }
+html[data-client-profile="mobile"] .app-main { max-width: 46rem; padding: 1.5rem 1rem 7rem; }
+html[data-client-profile="mobile"] .profile-grid { grid-template-columns: minmax(0, 1fr) !important; }
+html[data-client-profile="tablet"] .app-main { max-width: 64rem; padding: 2.25rem 2rem 7rem; }
+html[data-client-profile="tablet"] .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+html[data-client-profile="desktop"] .app-shell { display: grid; grid-template-columns: 17.5rem minmax(0, 1fr); }
+html[data-client-profile="desktop"] .app-sidebar { display: flex; flex-direction: column; }
+html[data-client-profile="desktop"] .app-mobile-header,
+html[data-client-profile="desktop"] .app-bottom-nav,
+html[data-client-profile="desktop"] .wall-header { display: none; }
+html[data-client-profile="desktop"] .app-main { padding: 3rem; padding-bottom: 3rem; }
+
+html[data-client-profile="wall"] { font-size: 18px; }
+html[data-client-profile="wall"] .app-shell { display: block; }
+html[data-client-profile="wall"] .app-sidebar,
+html[data-client-profile="wall"] .app-mobile-header,
+html[data-client-profile="wall"] .app-bottom-nav { display: none; }
+html[data-client-profile="wall"] .wall-header { display: flex; }
+html[data-client-profile="wall"] .app-main { max-width: none; padding: 2.5rem 4rem 3rem; }
+html[data-client-profile="wall"] .profile-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+html[data-client-profile="wall"] .profile-density-secondary { display: none; }
+html[data-client-profile="wall"] .touch-target,
+html[data-client-profile="wall"] button,
+html[data-client-profile="wall"] select { min-height: 4rem; }
+html[data-client-profile="wall"] .luxury-card { min-height: 12rem; padding: 2rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
