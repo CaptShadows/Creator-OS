@@ -16,7 +16,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx db/scripts/migrate.ts",
     "db:check": "tsx db/scripts/check.ts",
-    "db:bootstrap-owner": "tsx db/scripts/bootstrap-owner.ts"
+    "db:bootstrap-owner": "tsx db/scripts/bootstrap-owner.ts",
+    "db:seed": "tsx db/scripts/seed.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
