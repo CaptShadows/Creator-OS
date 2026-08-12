@@ -1,6 +1,6 @@
 # Creator OS Data Model
 
-This document defines the initial conceptual model. It is not yet a migration specification.
+This document describes the implemented canonical model in `db/schema/domain.ts` and migration `db/migrations/0001_sad_tag.sql`.
 
 ## Rule: workflow first, platform second
 
@@ -317,6 +317,40 @@ Potential entity:
 - externalId/path
 - displayName
 - metadata
+
+## Implemented persistence decisions
+
+- Every domain record uses an application-generated UUID primary key. External platform identifiers are ordinary nullable fields and never primary keys.
+- Every domain table carries `owner_user_id` for explicit owner-scoped queries, including child records. Application services must verify that linked records share the authenticated owner before writing.
+- Monetary fixed amounts are stored as integer cents; commission percentages are stored as integer basis points. This avoids floating-point money errors.
+- Content and Sample use PostgreSQL enums for the validated lifecycle values documented above. Other statuses remain text until real workflow use provides enough evidence to freeze their vocabularies.
+- Extension metadata is JSONB only at platform/integration boundaries and is validated by contracts in `lib/domain/contracts.ts` before writes.
+- All user-created domain tables include `archived_at`. Normal product behavior should archive rather than permanently delete.
+- Multiple accounts per platform are allowed. External account uniqueness is scoped to owner + platform + external identifier; platform itself is intentionally not unique.
+- Multiple Payment rows may reference the same Compensation, allowing partial and final receipts without conflating expected compensation with received money.
+
+## Foreign-key deletion policy
+
+| Relationship | Behavior | Reason |
+| --- | --- | --- |
+| Owner → owned domain data | `CASCADE` | Owner removal is a deliberate whole-account operation outside normal UI flows. |
+| Content → Publication | `RESTRICT` | Published/distribution history must be resolved or archived before content removal. |
+| PlatformAccount → Publication | `RESTRICT` | Publications must not silently lose their distribution identity. |
+| Campaign → Deliverable/Compensation/Payment | `RESTRICT` | Commercial obligations and receipts must remain intact. |
+| Product → Listing/Sample | `RESTRICT` | Product workflow history must remain intact. |
+| Brand → Campaign/Product | `SET NULL` | A duplicate/retired brand can be detached without destroying work. |
+| Content → Deliverable | `SET NULL` | A deliverable remains an obligation even if a linked draft is removed. |
+| Optional asset/integration links | `SET NULL` | Provider references remain inspectable without blocking parent archival cleanup. |
+
+## Local fixture strategy
+
+`db/fixtures/domain.ts` defines deterministic relationship fixtures, including two TikTok accounts, a campaign with two deliverables, and a product with two listings. After migrations and owner bootstrap, load them only into a non-production database:
+
+```bash
+OWNER_EMAIL='owner@example.com' npm run db:seed
+```
+
+The seed script refuses to run when `NODE_ENV=production` and uses conflict-safe inserts so it can support repeatable local regression work.
 
 Google Drive or another approved storage system may remain the binary store.
 

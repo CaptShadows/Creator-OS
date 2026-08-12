@@ -10,5 +10,6 @@ Application code must use `getDatabase()` rather than creating independent pools
 - `npm run db:migrate` applies committed migrations and fails on an incompatible database.
 - `npm run db:generate` creates a reviewed migration after a schema change.
 - `npm run db:bootstrap-owner` creates the first owner from temporary environment variables.
+- `OWNER_EMAIL=... npm run db:seed` loads deterministic development-only relationship fixtures.
 
 Never use `drizzle-kit push` in production; production schema changes flow through reviewed, version-controlled migrations.
