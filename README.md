@@ -257,6 +257,38 @@ npm run build
 
 Run the production build locally with `npm start` after `npm run build`. Deployment verification can call `GET /api/health`; a healthy process returns HTTP 200 with `{"status":"healthy"}` and service metadata.
 
+## PostgreSQL and initial owner
+
+Creator OS requires PostgreSQL at runtime. Create an empty database and a least-privilege application role, then copy `.env.example` to `.env.local` and replace every placeholder in `DATABASE_URL`.
+
+Initialize a fresh database from the committed migration set:
+
+```bash
+npm run db:check
+npm run db:migrate
+```
+
+Bootstrap the one owner without placing credentials in source control. Use temporary shell variables and remove them after the command:
+
+```bash
+OWNER_EMAIL='owner@example.com' \
+OWNER_DISPLAY_NAME='Tonya' \
+OWNER_PASSWORD='replace-with-a-long-unique-password' \
+npm run db:bootstrap-owner
+```
+
+PowerShell:
+
+```powershell
+$env:OWNER_EMAIL='owner@example.com'
+$env:OWNER_DISPLAY_NAME='Tonya'
+$env:OWNER_PASSWORD='replace-with-a-long-unique-password'
+npm.cmd run db:bootstrap-owner
+Remove-Item Env:OWNER_EMAIL, Env:OWNER_DISPLAY_NAME, Env:OWNER_PASSWORD
+```
+
+The login session is stored in an HttpOnly cookie; only a SHA-256 token hash is stored in PostgreSQL. Missing or unavailable PostgreSQL produces HTTP 503 from `/api/health` rather than a fake healthy response.
+
 See [architectural decisions](docs/DECISIONS.md) for foundation constraints future issues must preserve.
 
 ## Security

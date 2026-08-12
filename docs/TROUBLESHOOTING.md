@@ -29,6 +29,14 @@ Treat as high priority.
 5. Verify records directly through approved server-side tooling.
 6. Restore only after identifying whether data is absent versus merely not rendered.
 
+### Database health is unavailable
+
+1. Call `/api/health` and distinguish `configuration_missing` from `connection_failed`.
+2. For `configuration_missing`, verify the service environment contains `DATABASE_URL`; never paste it into browser tools or logs.
+3. For `connection_failed`, run `npm run db:check` from the application host and verify PostgreSQL service/network access.
+4. If connectivity works but the app fails, inspect migration state and the application logs before applying another migration.
+5. Do not create a browser, SQLite, or alternate-database fallback. Restore PostgreSQL service or follow the documented restore procedure.
+
 ### C. One platform is stale or broken
 
 Treat as an integration incident, not an application outage.

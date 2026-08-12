@@ -1,6 +1,6 @@
 # Backup and Recovery
 
-**Status: policy foundation; exact commands pending infrastructure selection.**
+**Status: PostgreSQL procedure defined; production schedule/retention pending host selection.**
 
 ## Recovery objective
 
@@ -70,3 +70,32 @@ Restore tests should record:
 - failures or manual corrections required
 
 Any undocumented recovery step discovered during testing must be added here or to the relevant SOP.
+
+## PostgreSQL backup procedure
+
+Preconditions: `DATABASE_URL` is loaded in the administrator shell, PostgreSQL client tools match the production major version, and the destination is an encrypted/off-host-approved location.
+
+```bash
+mkdir -p backups
+pg_dump --format=custom --no-owner --file="backups/creator-os-$(date +%Y%m%d-%H%M%S).dump" "$DATABASE_URL"
+```
+
+Verify the archive before copying it off host:
+
+```bash
+pg_restore --list backups/creator-os-YYYYMMDD-HHMMSS.dump >/dev/null
+```
+
+Never commit `backups/` or a database dump. Record the backup timestamp, size, application commit, and PostgreSQL version.
+
+## Restore test procedure
+
+Restore into a new, empty test database—never over the live database:
+
+```bash
+createdb creator_os_restore_test
+pg_restore --exit-on-error --no-owner --dbname=creator_os_restore_test backups/creator-os-YYYYMMDD-HHMMSS.dump
+DATABASE_URL='postgresql://.../creator_os_restore_test' npm run db:check
+```
+
+Start a compatible Creator OS revision against the restored test database, verify owner login and critical records, record the result, then destroy the isolated restore-test database only after validation. A failed restore blocks persistence-affecting production changes until understood.
