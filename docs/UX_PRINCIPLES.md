@@ -121,6 +121,10 @@ A feature that creates another thing Tonya has to maintain is not automatically 
 
 A technically recoverable system that frequently appears broken is still a bad product. Integration failures, stale data, loading states, and partial availability must be designed intentionally.
 
+### Calendar projection and dates
+
+Calendar is a projection over Content, Publication, Campaign, and Deliverable records; it does not maintain a duplicate event table. Date-only planning inputs are stored at UTC noon to prevent ordinary North American timezone offsets from shifting the displayed day. Queries use half-open `[start, end)` UTC ranges. Publication rescheduling updates the canonical Publication row.
+
 ## Context-switch target
 
 Target at least 80% of routine creator operations inside Creator OS.
