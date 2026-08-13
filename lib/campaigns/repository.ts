@@ -2,10 +2,11 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { getDatabase } from "@/db/client";
-import { brands, campaigns, compensations, contents, deliverables, payments } from "@/db/schema";
+import { attachmentLinks, auditEvents, brands, campaigns, compensations, contentCampaigns, contents, deliverables, payments, samples } from "@/db/schema";
 import { calculateDeliverableProgress, calculateOutstandingByCompensation, isOverdue } from "./calculations";
 import type { z } from "zod";
 import type { campaignEditSchema, compensationSchema, createCampaignSchema, deliverableSchema, deliverableUpdateSchema, paymentSchema } from "./contracts";
+import { campaignDeletionBlockers } from "./deletion";
 
 type Input<T extends z.ZodType> = z.infer<T>;
 
@@ -43,3 +44,27 @@ export async function addCompensation(ownerUserId:string,input:Input<typeof comp
 export async function addPayment(ownerUserId:string,input:Input<typeof paymentSchema>){if(!await ownsCampaign(ownerUserId,input.campaignId))throw new Error("Campaign not found");if(input.compensationId){const [c]=await getDatabase().db.select({id:compensations.id}).from(compensations).where(and(eq(compensations.ownerUserId,ownerUserId),eq(compensations.campaignId,input.campaignId),eq(compensations.id,input.compensationId))).limit(1);if(!c)throw new Error("Compensation not found");}await getDatabase().db.insert(payments).values({id:randomUUID(),ownerUserId,campaignId:input.campaignId,compensationId:input.compensationId,status:input.status,amountCents:input.amountCents,dueAt:input.dueAt,receivedAt:input.status==="received"?(input.receivedAt??new Date()):null,paymentReference:input.paymentReference,notes:input.notes});}
 export async function archiveCampaign(ownerUserId:string,id:string){await getDatabase().db.update(campaigns).set({archivedAt:new Date(),updatedAt:new Date()}).where(and(eq(campaigns.ownerUserId,ownerUserId),eq(campaigns.id,id)));}
 export async function recoverCampaign(ownerUserId:string,id:string){await getDatabase().db.update(campaigns).set({archivedAt:null,updatedAt:new Date()}).where(and(eq(campaigns.ownerUserId,ownerUserId),eq(campaigns.id,id)));}
+
+export type DeleteCampaignResult = { deleted: true } | { deleted: false; reason: "not_found" | "dependencies"; blockers?: string[] };
+export async function permanentlyDeleteCampaign(ownerUserId:string,id:string):Promise<DeleteCampaignResult>{
+  const db=getDatabase().db;
+  const [campaign]=await db.select({id:campaigns.id}).from(campaigns).where(and(eq(campaigns.ownerUserId,ownerUserId),eq(campaigns.id,id))).limit(1);
+  if(!campaign)return{deleted:false,reason:"not_found"};
+  const dependencyRows=await Promise.all([
+    db.select({id:deliverables.id}).from(deliverables).where(and(eq(deliverables.ownerUserId,ownerUserId),eq(deliverables.campaignId,id))).limit(1),
+    db.select({id:compensations.id}).from(compensations).where(and(eq(compensations.ownerUserId,ownerUserId),eq(compensations.campaignId,id))).limit(1),
+    db.select({id:payments.id}).from(payments).where(and(eq(payments.ownerUserId,ownerUserId),eq(payments.campaignId,id))).limit(1),
+    db.select({id:contentCampaigns.contentId}).from(contentCampaigns).where(and(eq(contentCampaigns.ownerUserId,ownerUserId),eq(contentCampaigns.campaignId,id))).limit(1),
+    db.select({id:samples.id}).from(samples).where(and(eq(samples.ownerUserId,ownerUserId),eq(samples.campaignId,id))).limit(1),
+    db.select({id:attachmentLinks.id}).from(attachmentLinks).where(and(eq(attachmentLinks.ownerUserId,ownerUserId),eq(attachmentLinks.campaignId,id))).limit(1),
+  ]);
+  const [hasDeliverables,hasCompensations,hasPayments,hasContentLinks,hasSamples,hasAttachments]=dependencyRows.map(rows=>Boolean(rows[0]));
+  const blockers=campaignDeletionBlockers({deliverables:hasDeliverables,compensations:hasCompensations,payments:hasPayments,contentLinks:hasContentLinks,samples:hasSamples,attachments:hasAttachments});
+  if(blockers.length)return{deleted:false,reason:"dependencies",blockers};
+  return db.transaction(async tx=>{
+    const deleted=await tx.delete(campaigns).where(and(eq(campaigns.ownerUserId,ownerUserId),eq(campaigns.id,id))).returning({id:campaigns.id});
+    if(!deleted.length)return{deleted:false,reason:"not_found"} as const;
+    await tx.insert(auditEvents).values({id:randomUUID(),actorUserId:ownerUserId,eventType:"campaign.permanently_deleted",entityType:"campaign",entityId:id,metadata:{confirmation:"two_step"}});
+    return{deleted:true} as const;
+  });
+}
