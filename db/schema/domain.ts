@@ -113,6 +113,44 @@ export const assetReferences = pgTable("asset_references", {
   type: text("type").notNull(), provider: text("provider").notNull(), externalId: text("external_id"), path: text("path"), displayName: text("display_name").notNull(), metadata: metadata(), ...timestamps,
 }, (table) => [index("asset_references_owner_type_idx").on(table.ownerUserId, table.type), index("asset_references_content_idx").on(table.contentId)]);
 
+export const attachments = pgTable("attachments", {
+  id: uuid("id").primaryKey(),
+  ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  originalFilename: text("original_filename").notNull(),
+  storageKey: text("storage_key").notNull(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  checksumSha256: text("checksum_sha256").notNull(),
+  metadata: metadata(),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("attachments_storage_key_unique").on(table.storageKey),
+  index("attachments_owner_archived_idx").on(table.ownerUserId, table.archivedAt),
+]);
+
+// A link row has exactly one populated domain target. The repository validates
+// that target ownership before insertion so attachment IDs never become an
+// authorization boundary.
+export const attachmentLinks = pgTable("attachment_links", {
+  id: uuid("id").primaryKey(),
+  ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  attachmentId: uuid("attachment_id").notNull().references(() => attachments.id, { onDelete: "cascade" }),
+  contentId: uuid("content_id").references(() => contents.id, { onDelete: "cascade" }),
+  campaignId: uuid("campaign_id").references(() => campaigns.id, { onDelete: "cascade" }),
+  deliverableId: uuid("deliverable_id").references(() => deliverables.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+  sampleId: uuid("sample_id").references(() => samples.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("attachment_links_attachment_idx").on(table.attachmentId),
+  index("attachment_links_owner_idx").on(table.ownerUserId),
+  index("attachment_links_content_idx").on(table.contentId),
+  index("attachment_links_campaign_idx").on(table.campaignId),
+  index("attachment_links_deliverable_idx").on(table.deliverableId),
+  index("attachment_links_product_idx").on(table.productId),
+  index("attachment_links_sample_idx").on(table.sampleId),
+]);
+
 export const integrationStates = pgTable("integration_states", {
   id: uuid("id").primaryKey(), ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }), platformAccountId: uuid("platform_account_id").references(() => platformAccounts.id, { onDelete: "set null" }),
   integration: text("integration").notNull(), status: text("status").default("not_configured").notNull(), lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }), lastSuccessAt: timestamp("last_success_at", { withTimezone: true }), lastError: text("last_error"), metadata: metadata(), ...timestamps,
@@ -140,3 +178,5 @@ export const samplesRelations = relations(samples, ({ one }) => ({ product: one(
 export const productListingsRelations = relations(productPlatformListings, ({ one }) => ({ product: one(products, { fields: [productPlatformListings.productId], references: [products.id] }), platformAccount: one(platformAccounts, { fields: [productPlatformListings.platformAccountId], references: [platformAccounts.id] }) }));
 export const compensationsRelations = relations(compensations, ({ one, many }) => ({ campaign: one(campaigns, { fields: [compensations.campaignId], references: [campaigns.id] }), payments: many(payments) }));
 export const paymentsRelations = relations(payments, ({ one }) => ({ campaign: one(campaigns, { fields: [payments.campaignId], references: [campaigns.id] }), compensation: one(compensations, { fields: [payments.compensationId], references: [compensations.id] }) }));
+export const attachmentsRelations = relations(attachments, ({ many }) => ({ links: many(attachmentLinks) }));
+export const attachmentLinksRelations = relations(attachmentLinks, ({ one }) => ({ attachment: one(attachments, { fields: [attachmentLinks.attachmentId], references: [attachments.id] }) }));

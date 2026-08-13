@@ -1,6 +1,6 @@
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import { campaigns, contents, deliverables, payments, platformAccounts, productPlatformListings, products, publications } from "@/db/schema";
+import { attachmentLinks, attachments, campaigns, contents, deliverables, payments, platformAccounts, productPlatformListings, products, publications, samples } from "@/db/schema";
 import { domainFixture } from "@/db/fixtures/domain";
 import { contentInputSchema, contentStatuses, platformAccountInputSchema, sampleStatuses } from "@/lib/domain/contracts";
 
@@ -45,5 +45,12 @@ describe("creator domain invariants", () => {
     expect(contents.archivedAt).toBeDefined();
     expect(campaigns.archivedAt).toBeDefined();
     expect(products.archivedAt).toBeDefined();
+  });
+
+  it("models shared filesystem attachments for every supported owner domain",()=>{
+    expect(attachments.storageKey.notNull).toBe(true);
+    expect(attachments.archivedAt).toBeDefined();
+    const foreignTables=getTableConfig(attachmentLinks).foreignKeys.map(key=>key.reference().foreignTable);
+    expect(foreignTables).toEqual(expect.arrayContaining([attachments,contents,campaigns,deliverables,products,samples]));
   });
 });
