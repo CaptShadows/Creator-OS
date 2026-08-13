@@ -15,6 +15,7 @@ User-created creator data is more important than replaceable analytics snapshots
 - Publications and scheduling state
 - Campaigns and deliverables
 - Products/affiliate mappings created manually
+- PDF attachment metadata and the corresponding host attachment directory
 - User/settings data
 
 ### Reconstructable but valuable
@@ -48,10 +49,11 @@ A backup that has never been restored is not considered verified.
 1. Stabilize the host/environment.
 2. Protect the latest available database backup.
 3. Restore PostgreSQL to a known-good state.
-4. Restore application configuration/secrets through the approved secret process.
-5. Deploy a compatible known-good application revision.
-6. Verify authentication and critical creator data.
-7. Reconnect/refresh integrations after core data is confirmed healthy.
+4. Restore the attachment directory from the same backup point to the absolute path configured by `ATTACHMENT_STORAGE_PATH`.
+5. Restore application configuration/secrets through the approved secret process.
+6. Deploy a compatible known-good application revision.
+7. Verify authentication, critical creator data, and several attachment downloads.
+8. Reconnect/refresh integrations after core data is confirmed healthy.
 
 ## RPO / RTO
 
@@ -87,6 +89,19 @@ pg_restore --list backups/creator-os-YYYYMMDD-HHMMSS.dump >/dev/null
 ```
 
 Never commit `backups/` or a database dump. Record the backup timestamp, size, application commit, and PostgreSQL version.
+
+## PDF attachment backup and consistency
+
+`ATTACHMENT_STORAGE_PATH` is production data. It must be an absolute directory outside the Git checkout (for example `C:\CreatorOSData\attachments` on the Windows host). Back it up alongside PostgreSQL using one coordinated backup run. Pause attachment uploads while the database dump and filesystem snapshot are taken, or use host snapshot tooling that gives both artifacts a consistent point in time.
+
+Example PowerShell copy after the database dump completes:
+
+```powershell
+$stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+Copy-Item "C:\CreatorOSData\attachments" "D:\CreatorOSBackups\$stamp\attachments" -Recurse
+```
+
+Restore PostgreSQL first, then restore the matching attachment directory, configure the same absolute path, and verify login plus a sample of active downloads. Metadata without a backing file returns a clear `410 backing_file_missing` response and must be recovered from the matching filesystem backup. A file without metadata is an orphan: preserve it during investigation, compare its storage key with the `attachments.storage_key` column, and remove it only after confirming it belongs to no database backup. Never invent metadata or rename storage keys by hand.
 
 ## Restore test procedure
 

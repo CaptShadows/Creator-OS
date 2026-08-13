@@ -29,6 +29,13 @@
       "when": 1786500494218,
       "tag": "0003_wakeful_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786582777590,
+      "tag": "0004_pretty_goliath",
+      "breakpoints": true
     }
   ]
 }
