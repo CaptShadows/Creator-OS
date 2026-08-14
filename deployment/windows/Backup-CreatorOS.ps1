@@ -7,6 +7,16 @@ param(
     [int]$RetentionDays = 14
 )
 . (Join-Path $PSScriptRoot "CreatorOS.Common.ps1")
+$logRoot = Join-Path $DataRoot "logs"
+$logPath = Join-Path $logRoot "backup-latest.log"
+New-Item -ItemType Directory -Force -Path $logRoot | Out-Null
+Start-Transcript -LiteralPath $logPath -Force | Out-Null
+trap {
+    $details = $_ | Format-List * -Force | Out-String
+    Add-Content -LiteralPath $logPath -Value "`nBACKUP FAILED`n$details"
+    Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
+    throw
+}
 $environmentPath = Join-Path $AppRoot ".env.local"
 $settings = Get-CreatorOSEnvironment $environmentPath
 if (-not $settings.ContainsKey("DATABASE_URL")) { throw "DATABASE_URL is missing from .env.local." }
@@ -35,7 +45,7 @@ try {
         computer = $env:COMPUTERNAME
         databaseBytes = (Get-Item -LiteralPath $databaseFile).Length
         attachmentsIncluded = (Test-Path -LiteralPath $attachmentsFile)
-        gitCommit = (& $GitPath -C $AppRoot rev-parse HEAD 2>$null)
+        gitCommit = (& $GitPath -c "safe.directory=$AppRoot" -C $AppRoot rev-parse HEAD 2>$null)
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $destination "manifest.json") -Encoding UTF8
 } catch {
     if (Test-Path -LiteralPath $destination) { Remove-Item -LiteralPath $destination -Recurse -Force }
@@ -46,3 +56,4 @@ try {
 
 Get-ChildItem -LiteralPath $backupRoot -Directory | Where-Object LastWriteTime -lt (Get-Date).AddDays(-$RetentionDays) | Remove-Item -Recurse -Force
 Write-Host "Verified backup created: $destination"
+Stop-Transcript | Out-Null
