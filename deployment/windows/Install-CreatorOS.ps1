@@ -60,10 +60,7 @@ $shortcut.Save()
 
 Start-ScheduledTask -TaskName "CreatorOS-App"
 if (-not (Test-CreatorOSHealth "$PublicUrl/api/health" 12)) { throw "Creator OS did not become healthy. Run Manage-CreatorOS.ps1 -Action Logs." }
-Start-ScheduledTask -TaskName "CreatorOS-Backup"
-Start-Sleep -Seconds 2
-while ((Get-ScheduledTask -TaskName "CreatorOS-Backup").State -in @("Running", "Queued")) { Start-Sleep -Seconds 2 }
-$backupResult = (Get-ScheduledTaskInfo -TaskName "CreatorOS-Backup").LastTaskResult
+$backupResult = Invoke-CreatorOSTaskAndWait "CreatorOS-Backup"
 if ($backupResult -ne 0) { throw "Initial backup failed with Task Scheduler result $backupResult." }
 Write-Host "Creator OS installed successfully. Shortcut: $shortcutPath"
 Write-Host "Git executable recorded for update operations: $git"

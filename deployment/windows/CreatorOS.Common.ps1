@@ -79,3 +79,17 @@ function Stop-CreatorOSApp([string]$DataRoot, [string]$AppRoot) {
     }
     Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
 }
+
+function Invoke-CreatorOSTaskAndWait([string]$TaskName, [int]$TimeoutSeconds = 600) {
+    $before = (Get-ScheduledTaskInfo -TaskName $TaskName).LastRunTime
+    Start-ScheduledTask -TaskName $TaskName
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        Start-Sleep -Seconds 1
+        $info = Get-ScheduledTaskInfo -TaskName $TaskName
+        $state = (Get-ScheduledTask -TaskName $TaskName).State
+        $newRunStarted = $info.LastRunTime -gt $before
+        if ($newRunStarted -and $state -notin @("Running", "Queued")) { return $info.LastTaskResult }
+    } while ((Get-Date) -lt $deadline)
+    throw "$TaskName did not complete within $TimeoutSeconds seconds."
+}
