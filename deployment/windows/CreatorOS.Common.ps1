@@ -22,6 +22,14 @@ function Get-CreatorOSEnvironment([string]$Path) {
     return $values
 }
 
+function Import-CreatorOSEnvironment([string]$Path) {
+    $values = Get-CreatorOSEnvironment $Path
+    foreach ($entry in $values.GetEnumerator()) {
+        [Environment]::SetEnvironmentVariable([string]$entry.Key, [string]$entry.Value, "Process")
+    }
+    return $values
+}
+
 function Resolve-CreatorOSTool([string]$Name) {
     $command = Get-Command $Name -ErrorAction SilentlyContinue
     if (-not $command -and $Name -in @("pg_dump.exe", "pg_restore.exe")) {

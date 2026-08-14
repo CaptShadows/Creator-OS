@@ -6,6 +6,7 @@ param(
 . (Join-Path $PSScriptRoot "CreatorOS.Common.ps1")
 Assert-Administrator
 $AppRoot = (Resolve-Path -LiteralPath $AppRoot).Path
+$null = Import-CreatorOSEnvironment (Join-Path $AppRoot ".env.local")
 $npm = Resolve-CreatorOSTool "npm.cmd"
 $git = Resolve-CreatorOSTool "git.exe"
 $previous = (& $git -C $AppRoot rev-parse HEAD).Trim()
