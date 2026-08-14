@@ -9,7 +9,7 @@ export interface AttachmentStorage {
   remove(key: string): Promise<void>;
 }
 
-export type AttachmentConfig = { storagePath: string; maxBytes: number };
+export type AttachmentConfig = { storagePath: string; maxBytes: number; maxVideoBytes: number };
 
 export function getAttachmentConfig(env = process.env): AttachmentConfig {
   const rawPath = env.ATTACHMENT_STORAGE_PATH?.trim();
@@ -20,13 +20,15 @@ export function getAttachmentConfig(env = process.env): AttachmentConfig {
   if (fromRepo === "" || (!fromRepo.startsWith("..") && !isAbsolute(fromRepo))) throw new Error("ATTACHMENT_STORAGE_PATH must be outside the Creator OS repository.");
   const maxBytes = Number(env.ATTACHMENT_MAX_BYTES ?? 10 * 1024 * 1024);
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1024) throw new Error("ATTACHMENT_MAX_BYTES must be an integer of at least 1024 bytes.");
-  return { storagePath, maxBytes };
+  const maxVideoBytes = Number(env.ATTACHMENT_MAX_VIDEO_BYTES ?? 250 * 1024 * 1024);
+  if (!Number.isSafeInteger(maxVideoBytes) || maxVideoBytes < 1024) throw new Error("ATTACHMENT_MAX_VIDEO_BYTES must be an integer of at least 1024 bytes.");
+  return { storagePath, maxBytes, maxVideoBytes };
 }
 
 export class FileSystemAttachmentStorage implements AttachmentStorage {
   constructor(private readonly root: string) {}
   private path(key: string) {
-    if (!/^[a-f0-9-]+\.pdf$/.test(key)) throw new Error("Invalid attachment storage key");
+    if (!/^[a-f0-9-]+\.(pdf|mp4|mov|webm)$/.test(key)) throw new Error("Invalid attachment storage key");
     return resolve(this.root, key);
   }
   async put(key: string, bytes: Uint8Array) {

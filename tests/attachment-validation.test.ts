@@ -1,5 +1,5 @@
 import { describe,expect,it } from "vitest";
-import { AttachmentValidationError,safeDisplayFilename,validatePdf } from "@/lib/attachments/validation";
+import { AttachmentValidationError,safeDisplayFilename,safeVideoFilename,validatePdf,validateVideo } from "@/lib/attachments/validation";
 
 const pdf=new TextEncoder().encode("%PDF-1.7\n%%EOF");
 describe("PDF attachment validation",()=>{
@@ -10,4 +10,16 @@ describe("PDF attachment validation",()=>{
     expect(()=>validatePdf({filename:"brief.pdf",mimeType:"application/pdf",bytes:pdf},5)).toThrow("upload limit");
   });
   it("keeps a display name separate from a safe storage identity",()=>{expect(safeDisplayFilename("../ Brand Brief ")).toBe(".. Brand Brief.pdf");});
+});
+
+describe("video attachment validation",()=>{
+  const mp4=new Uint8Array([0,0,0,20,...new TextEncoder().encode("ftyp"),0,0,0,0]);
+  it("accepts signed MP4 videos and preserves a safe extension",()=>{
+    expect(validateVideo({filename:"demo.mp4",mimeType:"video/mp4",bytes:mp4},1024)).toMatch(/^[a-f0-9]{64}$/);
+    expect(safeVideoFilename("../ Product Demo","video/mp4")).toBe(".. Product Demo.mp4");
+  });
+  it("rejects mismatched and unsigned videos",()=>{
+    expect(()=>validateVideo({filename:"demo.mov",mimeType:"video/mp4",bytes:mp4},1024)).toThrow("does not match");
+    expect(()=>validateVideo({filename:"demo.mp4",mimeType:"video/mp4",bytes:new Uint8Array([1,2,3,4,5,6,7,8])},1024)).toThrow("signature");
+  });
 });
