@@ -1,11 +1,13 @@
 param(
     [Parameter(Mandatory)][string]$BackupDirectory,
     [Parameter(Mandatory)][string]$TestDatabaseUrl,
-    [string]$AppRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")),
+    [string]$AppRoot,
     [string]$TestAttachmentPath = "C:\ProgramData\CreatorOS\restore-test\attachments"
 )
 . (Join-Path $PSScriptRoot "CreatorOS.Common.ps1")
 Assert-Administrator
+if (-not $AppRoot) { $AppRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path }
+$AppRoot = (Resolve-Path -LiteralPath $AppRoot).Path
 $databaseFile = Join-Path $BackupDirectory "creator-os.dump"
 $attachmentsFile = Join-Path $BackupDirectory "attachments.zip"
 if (-not (Test-Path -LiteralPath $databaseFile)) { throw "Backup dump not found: $databaseFile" }
