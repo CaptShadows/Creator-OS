@@ -3,7 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { getDatabase } from "@/db/client";
-import { campaigns, contentCampaigns, contentProducts, contents, platformAccounts, products, publications } from "@/db/schema";
+import { attachmentLinks, auditEvents, campaigns, contentCampaigns, contentProducts, contents, deliverables, platformAccounts, products, publications, samples } from "@/db/schema";
 import { canTransitionContent } from "./lifecycle";
 import type { ContentStatus } from "@/lib/domain/contracts";
 import type { ContentAutosaveInput } from "./contracts";
@@ -62,6 +62,7 @@ export async function recoverContent(ownerUserId: string, id: string): Promise<v
   if (!content?.archivedAt) return;
   await getDatabase().db.update(contents).set({ status: content.statusBeforeArchive ?? "idea", statusBeforeArchive: null, archivedAt: null, updatedAt: new Date() }).where(and(eq(contents.id, id), eq(contents.ownerUserId, ownerUserId)));
 }
+export async function permanentlyDeleteContent(ownerUserId:string,id:string){const db=getDatabase().db;const deps=await Promise.all([db.select({id:publications.id}).from(publications).where(and(eq(publications.ownerUserId,ownerUserId),eq(publications.contentId,id))).limit(1),db.select({id:deliverables.id}).from(deliverables).where(and(eq(deliverables.ownerUserId,ownerUserId),eq(deliverables.contentId,id))).limit(1),db.select({id:samples.id}).from(samples).where(and(eq(samples.ownerUserId,ownerUserId),eq(samples.contentId,id))).limit(1),db.select({id:attachmentLinks.id}).from(attachmentLinks).where(and(eq(attachmentLinks.ownerUserId,ownerUserId),eq(attachmentLinks.contentId,id))).limit(1)]);if(deps.some(x=>x.length))return false;return db.transaction(async tx=>{await tx.delete(contentCampaigns).where(and(eq(contentCampaigns.ownerUserId,ownerUserId),eq(contentCampaigns.contentId,id)));await tx.delete(contentProducts).where(and(eq(contentProducts.ownerUserId,ownerUserId),eq(contentProducts.contentId,id)));const rows=await tx.delete(contents).where(and(eq(contents.ownerUserId,ownerUserId),eq(contents.id,id))).returning({id:contents.id});if(!rows.length)return false;await tx.insert(auditEvents).values({id:randomUUID(),actorUserId:ownerUserId,eventType:"content.permanently_deleted",entityType:"content",entityId:id});return true;});}
 
 export async function replaceContentAssociations(ownerUserId: string, contentId: string, campaignIds: string[], productIds: string[], platformAccountIds: string[]): Promise<void> {
   if (!(await getOwnerContent(ownerUserId, contentId))) throw new Error("Content does not belong to owner");

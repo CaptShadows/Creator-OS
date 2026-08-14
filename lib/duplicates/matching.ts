@@ -1,0 +1,5 @@
+export type DuplicateCandidate={id:string;name:string;href:string;reason:"Normalized name match"|"Similar name"};
+export function normalizeName(value:string){return value.normalize("NFKC").toLocaleLowerCase().replace(/[\p{P}\p{S}\s]+/gu,"").trim()}
+function distance(a:string,b:string){const row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let previous=row[0];row[0]=i;for(let j=1;j<=b.length;j++){const current=row[j];row[j]=Math.min(row[j]+1,row[j-1]+1,previous+(a[i-1]===b[j-1]?0:1));previous=current}}return row[b.length]}
+export function classifyDuplicate(input:string,candidate:string){const a=normalizeName(input),b=normalizeName(candidate);if(!a||!b)return null;if(a===b)return"Normalized name match" as const;const longest=Math.max(a.length,b.length);return longest>=5&&distance(a,b)/longest<=.28?"Similar name" as const:null}
+export function matchDuplicates(input:string,rows:{id:string;name:string;href:string}[]):DuplicateCandidate[]{return rows.flatMap(row=>{const reason=classifyDuplicate(input,row.name);return reason?[{...row,reason}]:[]})}

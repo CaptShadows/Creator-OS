@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { getDatabase } from "@/db/client";
-import { attachmentLinks, attachments, campaigns, contents, deliverables, products, samples } from "@/db/schema";
+import { attachmentLinks, attachments, auditEvents, campaigns, contents, deliverables, products, samples } from "@/db/schema";
 import type { AttachmentStorage } from "./storage";
 import { safeDisplayFilename, validatePdf } from "./validation";
 
@@ -35,3 +35,4 @@ export async function getAttachment(ownerUserId:string,id:string,includeArchived
 export async function renameAttachment(ownerUserId:string,id:string,name:string){await getDatabase().db.update(attachments).set({originalFilename:safeDisplayFilename(name),updatedAt:new Date()}).where(and(eq(attachments.ownerUserId,ownerUserId),eq(attachments.id,id)));}
 export async function archiveAttachment(ownerUserId:string,id:string){await getDatabase().db.update(attachments).set({archivedAt:new Date(),updatedAt:new Date()}).where(and(eq(attachments.ownerUserId,ownerUserId),eq(attachments.id,id)));}
 export async function restoreAttachment(ownerUserId:string,id:string){await getDatabase().db.update(attachments).set({archivedAt:null,updatedAt:new Date()}).where(and(eq(attachments.ownerUserId,ownerUserId),eq(attachments.id,id)));}
+export async function permanentlyDeleteAttachment(ownerUserId:string,id:string,storage:AttachmentStorage){const row=await getAttachment(ownerUserId,id,true);if(!row)return false;const bytes=await storage.read(row.storageKey);await storage.remove(row.storageKey);try{await getDatabase().db.transaction(async tx=>{const deleted=await tx.delete(attachments).where(and(eq(attachments.ownerUserId,ownerUserId),eq(attachments.id,id))).returning({id:attachments.id});if(!deleted.length)throw new Error("Attachment not found");await tx.insert(auditEvents).values({id:randomUUID(),actorUserId:ownerUserId,eventType:"attachment.permanently_deleted",entityType:"attachment",entityId:id,metadata:{confirmation:"two_step",filename:row.originalFilename}})});return true}catch(error){await storage.put(row.storageKey,bytes);throw error;}}
