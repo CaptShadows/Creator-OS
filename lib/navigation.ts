@@ -4,6 +4,7 @@ export const navigation = [
   { href: "/create", label: "Create", shortLabel: "Create" },
   { href: "/campaigns", label: "Campaigns", shortLabel: "Campaigns" },
   { href: "/products", label: "Products", shortLabel: "Products" },
+  { href: "/archive", label: "Archive", shortLabel: "Archive" },
   { href: "/analytics", label: "Analytics", shortLabel: "Analytics" },
   { href: "/platforms", label: "Platforms", shortLabel: "Platforms" },
 ] as const;
