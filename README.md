@@ -2,6 +2,8 @@
 
 Creator OS is a LAN-first creator operations platform for Tonya's content business. It uses proven architectural lessons from Netrunner OS without inheriting Netrunner-specific domains or visual identity.
 
+Production Windows installations run silently through native Scheduled Tasks; Tonya never needs to keep PowerShell open. Installation, updates, backups, health checks, rollback, and removal are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 The goal is not to build another analytics dashboard. The goal is to replace the workflow currently scattered across memory, messages, platform apps, and Google Drive with one primary workspace.
 
 ## Product north star

@@ -18,6 +18,16 @@ Check, in order:
 
 Do not start rotating platform credentials when the application itself is down.
 
+On the Windows production host, an administrator should run:
+
+```powershell
+.\deployment\windows\Manage-CreatorOS.ps1 -Action Status
+.\deployment\windows\Manage-CreatorOS.ps1 -Action Health
+.\deployment\windows\Manage-CreatorOS.ps1 -Action Logs
+```
+
+If the task is stopped, start it once. If it repeatedly stops, inspect logs rather than repeatedly clicking the desktop shortcut. Confirm the PostgreSQL Windows service is running. The desktop shortcut opens the browser only; it does not own or repair the background service.
+
 ### B. Application works but content/calendar data is missing
 
 Treat as high priority.

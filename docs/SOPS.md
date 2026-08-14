@@ -6,15 +6,15 @@ This is the operational entry point when Creator OS is deployed. Procedures shou
 
 | SOP | Purpose | Status |
 | --- | --- | --- |
-| Initial deployment | Build a known-good host from scratch | Planned |
-| Standard update | Safely deploy a new version | Planned |
-| Rollback | Return to last known-good application version | Planned |
-| Database backup | Produce a verified backup | Procedure defined; schedule pending |
+| Initial deployment | Build a known-good host from scratch | Windows procedure defined; host rehearsal pending |
+| Standard update | Safely deploy a new version | Windows procedure defined; host rehearsal pending |
+| Rollback | Return to last known-good application version | Windows procedure defined; host rehearsal pending |
+| Database backup | Produce a verified backup | Automated Windows procedure defined; restore rehearsal pending |
 | Database restore | Restore authoritative data | Test procedure defined; host rehearsal pending |
 | Secret rotation | Replace compromised/expired credentials | Planned |
 | Platform reconnect | Recover an expired/revoked integration | Planned |
 | Integration outage | Operate with stale/unavailable platform data | Planned |
-| Host recovery | Recover after host/device failure | Planned |
+| Host recovery | Recover after host/device failure | Core Windows procedure defined; host rehearsal pending |
 | Client recovery | Recover a broken browser/client profile | Planned |
 | Wall display recovery | Restore wall display operation | Planned |
 

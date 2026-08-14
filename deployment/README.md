@@ -1,3 +1,5 @@
 # Deployment assets
 
-Service-manager, reverse-proxy, and host-specific deployment files belong here after the LAN hosting architecture is selected. See `docs/DEPLOYMENT.md` for the required decisions and verification checklist.
+`windows/` contains the supported single-host Windows deployment scripts. Creator OS runs as native background Scheduled Tasks under `SYSTEM`; no PowerShell window remains open and no interactive login is required.
+
+Start with `docs/DEPLOYMENT.md`. Do not run the scripts against a computer that holds irreplaceable data until the backup and restore-test procedures have been completed.
