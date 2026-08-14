@@ -1,116 +1,48 @@
 # Backup and Recovery
 
-**Status: PostgreSQL procedure defined; production schedule/retention pending host selection.**
+## Production policy
 
-## Recovery objective
+`CreatorOS-Backup` runs daily at 2:00 AM and retains 14 days by default. Every run creates a timestamped directory under `C:\ProgramData\CreatorOS\backups` containing:
 
-User-created creator data is more important than replaceable analytics snapshots. Recovery design should prioritize content, scripts, campaign records, calendar state, settings, and authentication ownership data.
+- `creator-os.dump`: PostgreSQL custom-format dump
+- `attachments.zip`: matching attachment directory copy when configured
+- `manifest.json`: timestamp, host, size, attachment inclusion, and application commit
 
-## Data classes
+The app task is paused while the dump and attachment archive are captured, then restarted in a `finally` block. This creates a coordinated pair without leaving uploads active between the database and filesystem copies. The dump is verified with `pg_restore --list` before success. A failed run removes its incomplete timestamp directory. Backups must never be committed to Git.
 
-### Critical
-
-- Content records
-- Scripts/captions/notes
-- Publications and scheduling state
-- Campaigns and deliverables
-- Products/affiliate mappings created manually
-- PDF attachment metadata and the corresponding host attachment directory
-- User/settings data
-
-### Reconstructable but valuable
-
-- Platform account metric snapshots
-- Publication metric snapshots
-- Sync history
-
-### Replaceable
-
-- Build artifacts
-- dependency directories
-- caches
-- temporary imports
-
-## Backup requirements
-
-Production must eventually have:
-
-- automated PostgreSQL backups
-- documented retention
-- off-host copy
-- encrypted handling where backups contain private data
-- periodic restore testing
-- separate secure handling for environment secrets
-
-A backup that has never been restored is not considered verified.
-
-## Recovery order
-
-1. Stabilize the host/environment.
-2. Protect the latest available database backup.
-3. Restore PostgreSQL to a known-good state.
-4. Restore the attachment directory from the same backup point to the absolute path configured by `ATTACHMENT_STORAGE_PATH`.
-5. Restore application configuration/secrets through the approved secret process.
-6. Deploy a compatible known-good application revision.
-7. Verify authentication, critical creator data, and several attachment downloads.
-8. Reconnect/refresh integrations after core data is confirmed healthy.
-
-## RPO / RTO
-
-Formal recovery point and recovery time objectives should be selected after actual usage begins. Initial target should favor simple, frequent backups over premature high-availability infrastructure.
-
-## Restore testing
-
-Restore tests should record:
-
-- backup timestamp
-- backup size
-- application/database version
-- restore environment
-- restore duration
-- verification results
-- failures or manual corrections required
-
-Any undocumented recovery step discovered during testing must be added here or to the relevant SOP.
-
-## PostgreSQL backup procedure
-
-Preconditions: `DATABASE_URL` is loaded in the administrator shell, PostgreSQL client tools match the production major version, and the destination is an encrypted/off-host-approved location.
-
-```bash
-mkdir -p backups
-pg_dump --format=custom --no-owner --file="backups/creator-os-$(date +%Y%m%d-%H%M%S).dump" "$DATABASE_URL"
-```
-
-Verify the archive before copying it off host:
-
-```bash
-pg_restore --list backups/creator-os-YYYYMMDD-HHMMSS.dump >/dev/null
-```
-
-Never commit `backups/` or a database dump. Record the backup timestamp, size, application commit, and PostgreSQL version.
-
-## PDF attachment backup and consistency
-
-`ATTACHMENT_STORAGE_PATH` is production data. It must be an absolute directory outside the Git checkout (for example `C:\CreatorOSData\attachments` on the Windows host). Back it up alongside PostgreSQL using one coordinated backup run. Pause attachment uploads while the database dump and filesystem snapshot are taken, or use host snapshot tooling that gives both artifacts a consistent point in time.
-
-Example PowerShell copy after the database dump completes:
+## Run and inspect a backup
 
 ```powershell
-$stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-Copy-Item "C:\CreatorOSData\attachments" "D:\CreatorOSBackups\$stamp\attachments" -Recurse
+.\deployment\windows\Manage-CreatorOS.ps1 -Action Backup
+Get-ScheduledTaskInfo -TaskName CreatorOS-Backup
+Get-ChildItem C:\ProgramData\CreatorOS\backups | Sort-Object LastWriteTime -Descending
 ```
 
-Restore PostgreSQL first, then restore the matching attachment directory, configure the same absolute path, and verify login plus a sample of active downloads. Metadata without a backing file returns a clear `410 backing_file_missing` response and must be recovered from the matching filesystem backup. A file without metadata is an orphan: preserve it during investigation, compare its storage key with the `attachments.storage_key` column, and remove it only after confirming it belongs to no database backup. Never invent metadata or rename storage keys by hand.
+Copy verified backup directories to an approved encrypted off-host destination. A disk failure can destroy live data and same-disk backups together.
 
-## Restore test procedure
+## Restore test
 
-Restore into a new, empty test database—never over the live database:
+Never restore over the live database for a test. Create a new empty test database and use a test-only URL:
 
-```bash
-createdb creator_os_restore_test
-pg_restore --exit-on-error --no-owner --dbname=creator_os_restore_test backups/creator-os-YYYYMMDD-HHMMSS.dump
-DATABASE_URL='postgresql://.../creator_os_restore_test' npm run db:check
+```powershell
+.\deployment\windows\Restore-Test-CreatorOS.ps1 `
+  -BackupDirectory "C:\ProgramData\CreatorOS\backups\YYYYMMDD-HHMMSS" `
+  -TestDatabaseUrl "postgresql://creator_os:YOUR_PASSWORD@127.0.0.1:5432/creator_os_restore_test"
 ```
 
-Start a compatible Creator OS revision against the restored test database, verify owner login and critical records, record the result, then destroy the isolated restore-test database only after validation. A failed restore blocks persistence-affecting production changes until understood.
+Start a compatible revision with the test database and test attachment directory. Verify owner login, content, campaigns, samples, calendar state, and several attachment downloads. Record the timestamp, dump size, application/PostgreSQL versions, duration, and outcome. Delete the isolated database only after recording results.
+
+## Live recovery order
+
+1. Stop `CreatorOS-App` and protect the newest backup.
+2. Confirm whether data is absent or the app points to the wrong database.
+3. Stabilize PostgreSQL and the host.
+4. Restore the selected dump only after explicit review.
+5. Restore its matching `attachments.zip` to the configured attachment path.
+6. Restore `.env.local` through the approved secret process; it is not in data backups.
+7. Deploy a database-compatible known-good application revision.
+8. Start Creator OS and verify health, login, critical records, and downloads.
+
+Application rollback and database restoration are separate decisions. Never automatically reverse migrations or overwrite live data because a build failed.
+
+Protect manually created content, scripts, campaigns, deliverables, products, samples, publications, settings, authentication ownership, and attachments first. Integration snapshots are reconstructable. Build artifacts, dependencies, and caches are replaceable.
