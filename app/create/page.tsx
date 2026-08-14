@@ -6,13 +6,15 @@ import { contentStatusLabels } from "@/lib/content/lifecycle";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DuplicateWarning } from "@/components/duplicate-warning";
 
 export const dynamic = "force-dynamic";
 
-export default async function CreatePage({ searchParams }: { searchParams: Promise<{ archived?: string }> }) {
-  const owner = await requireOwner(); const showArchived = (await searchParams).archived === "1"; const items = await listOwnerContent(owner.id, showArchived);
+export default async function CreatePage({ searchParams }: { searchParams: Promise<{ archived?: string;duplicateMatches?:string;duplicateToken?:string;idea?:string }> }) {
+  const owner = await requireOwner(); const query=await searchParams,showArchived = query.archived === "1"; const items = await listOwnerContent(owner.id, showArchived);
   return <section className="space-y-8">
     <PageHeader eyebrow="Create" title="Capture first. Shape it later." description="One thought is enough to start. Hooks, scripts, captions, products, and platforms can wait until they help." />
+    <DuplicateWarning matches={query.duplicateMatches} cancelHref="/create"><form action={createIdeaAction}><input type="hidden" name="idea" value={query.idea}/><input type="hidden" name="duplicateToken" value={query.duplicateToken}/><button className="primary-action min-h-12 px-5 text-sm font-bold">Create anyway</button></form></DuplicateWarning>
     {!showArchived && <form id="quick-idea" action={createIdeaAction} className="luxury-card grid gap-4 rounded-xl p-5 sm:grid-cols-[1fr_auto] sm:items-end">
       <label className="grid gap-2 text-sm font-bold">What&apos;s the idea?<textarea name="idea" required autoFocus rows={2} maxLength={10000} placeholder="Drop the thought here…" className="min-h-24 resize-y border border-[var(--line)] bg-white p-3 font-normal leading-6 outline-none focus:border-[var(--accent-strong)] sm:min-h-16" /></label>
       <button className="primary-action min-h-12 px-6 text-sm font-bold" type="submit">Save idea</button>
