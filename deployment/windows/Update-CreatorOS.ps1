@@ -15,7 +15,7 @@ Start-ScheduledTask -TaskName "CreatorOS-Backup"
 Start-Sleep -Seconds 2
 do { Start-Sleep -Seconds 2; $backupState = (Get-ScheduledTask -TaskName "CreatorOS-Backup").State } while ($backupState -in @("Running", "Queued"))
 if ((Get-ScheduledTaskInfo -TaskName "CreatorOS-Backup").LastTaskResult -ne 0) { throw "Pre-update backup failed. Update stopped before changing the application." }
-Stop-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue
+Stop-CreatorOSApp $DataRoot $AppRoot
 try {
     Invoke-CreatorOSCommand $git @("-C", $AppRoot, "fetch", "origin", "main")
     Invoke-CreatorOSCommand $git @("-C", $AppRoot, "switch", "--detach", "origin/main")

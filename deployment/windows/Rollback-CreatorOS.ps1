@@ -9,7 +9,7 @@ $AppRoot = (Resolve-Path -LiteralPath $AppRoot).Path
 $npm = Resolve-CreatorOSTool "npm.cmd"
 $git = Resolve-CreatorOSTool "git.exe"
 if (& $git -C $AppRoot status --porcelain) { throw "The production checkout has uncommitted changes. Rollback stopped." }
-Stop-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue
+Stop-CreatorOSApp "C:\ProgramData\CreatorOS" $AppRoot
 Invoke-CreatorOSCommand $git @("-C", $AppRoot, "switch", "--detach", $Commit)
 Invoke-CreatorOSCommand $npm @("ci", "--prefix", $AppRoot)
 Invoke-CreatorOSCommand $npm @("run", "build", "--prefix", $AppRoot)

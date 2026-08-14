@@ -27,7 +27,7 @@ Protect-CreatorOSPath $DataRoot
 Protect-CreatorOSPath $environmentPath
 $existingAppTask = Get-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue
 $existingAppWasRunning = $existingAppTask -and $existingAppTask.State -eq "Running"
-if ($existingAppTask) { Stop-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue; Start-Sleep -Seconds 3 }
+if ($existingAppTask) { Stop-CreatorOSApp $DataRoot $AppRoot; Start-Sleep -Seconds 2 }
 try {
     Invoke-CreatorOSCommand $npm @("ci", "--prefix", $AppRoot)
     Invoke-CreatorOSCommand $npm @("run", "db:migrate", "--prefix", $AppRoot)
