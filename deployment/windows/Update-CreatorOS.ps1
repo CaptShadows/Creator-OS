@@ -11,10 +11,7 @@ $npm = Resolve-CreatorOSTool "npm.cmd"
 $git = Resolve-CreatorOSTool "git.exe"
 $previous = (& $git -C $AppRoot rev-parse HEAD).Trim()
 if (& $git -C $AppRoot status --porcelain) { throw "The production checkout has uncommitted changes. Update stopped without changing anything." }
-Start-ScheduledTask -TaskName "CreatorOS-Backup"
-Start-Sleep -Seconds 2
-do { Start-Sleep -Seconds 2; $backupState = (Get-ScheduledTask -TaskName "CreatorOS-Backup").State } while ($backupState -in @("Running", "Queued"))
-if ((Get-ScheduledTaskInfo -TaskName "CreatorOS-Backup").LastTaskResult -ne 0) { throw "Pre-update backup failed. Update stopped before changing the application." }
+if ((Invoke-CreatorOSTaskAndWait "CreatorOS-Backup") -ne 0) { throw "Pre-update backup failed. Update stopped before changing the application." }
 Stop-CreatorOSApp $DataRoot $AppRoot
 try {
     Invoke-CreatorOSCommand $git @("-C", $AppRoot, "fetch", "origin", "main")
