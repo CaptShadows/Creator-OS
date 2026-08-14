@@ -23,7 +23,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           ))}
         </nav>
         <Link href="/create#quick-idea" className="primary-action mt-5 inline-flex min-h-12 items-center justify-center px-4 text-sm font-bold">+ Idea</Link>
-        <div className="mt-auto border-t border-[var(--line)] pt-5">
+        <div className="mt-auto border-t border-[var(--line)] pb-14 pt-5">
           <p className="eyebrow text-[0.625rem]">Tonya Wellness</p>
           <p className="mt-2 max-w-44 text-xs leading-5 text-[var(--muted)]">A calmer way to run the creator business.</p>
           <div className="mt-4"><ProfileControl /></div>
@@ -34,9 +34,9 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       <div className="app-content min-w-0">
         <header className="app-mobile-header sticky top-0 z-10 min-h-16 items-center justify-between border-b border-[var(--line)] bg-[color:var(--surface)]/95 px-5 backdrop-blur">
           <Brand />
-          <ProfileControl compact />
+          <div className="flex items-center gap-3"><ProfileControl compact /><SignOutButton compact /></div>
         </header>
-        <header className="wall-header flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--surface)] px-10 py-5"><Brand /><nav aria-label="Wall primary" className="flex flex-wrap gap-2">{navigation.map((item) => <NavigationLink key={item.href} href={item.href} label={item.shortLabel} />)}</nav><ProfileControl compact /></header>
+        <header className="wall-header flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--surface)] px-10 py-5"><Brand /><nav aria-label="Wall primary" className="flex flex-wrap gap-2">{navigation.map((item) => <NavigationLink key={item.href} href={item.href} label={item.shortLabel} />)}</nav><div className="flex items-center gap-3"><ProfileControl compact/><SignOutButton compact/></div></header>
         <main className="app-main mx-auto w-full max-w-7xl">{children}</main>
       </div>
 
@@ -46,6 +46,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
     </div>
   );
 }
+
+function SignOutButton({compact=false}:{compact?:boolean}){return <form action={logoutAction}><button className={compact?"min-h-11 px-2 text-xs font-bold uppercase tracking-[0.1em] text-[var(--accent-strong)]":"min-h-11 text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent-strong)]"} type="submit">Sign out</button></form>}
 
 function Brand() {
   return (
