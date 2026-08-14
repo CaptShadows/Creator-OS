@@ -21,7 +21,7 @@ $attachmentsFile = Join-Path $destination "attachments.zip"
 $appWasRunning = (Get-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue).State -eq "Running"
 
 try {
-    if ($appWasRunning) { Stop-ScheduledTask -TaskName "CreatorOS-App"; Start-Sleep -Seconds 3 }
+    if ($appWasRunning) { Stop-CreatorOSApp $DataRoot $AppRoot; Start-Sleep -Seconds 2 }
     Invoke-CreatorOSCommand $PgDumpPath @("--format=custom", "--no-owner", "--file=$databaseFile", $settings["DATABASE_URL"])
     Invoke-CreatorOSCommand $PgRestorePath @("--list", $databaseFile)
     $attachmentPath = $settings["ATTACHMENT_STORAGE_PATH"]

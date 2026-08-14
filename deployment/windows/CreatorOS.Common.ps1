@@ -63,3 +63,19 @@ function Protect-CreatorOSPath([string]$Path) {
     & icacls.exe $Path /inheritance:r /grant:r $grant | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Could not protect $Path." }
 }
+
+function Stop-CreatorOSApp([string]$DataRoot, [string]$AppRoot) {
+    Stop-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue
+    $processIds = @()
+    $pidPath = Join-Path $DataRoot "app.pid"
+    if (Test-Path -LiteralPath $pidPath) {
+        $storedId = 0
+        if ([int]::TryParse((Get-Content -LiteralPath $pidPath -Raw).Trim(), [ref]$storedId)) { $processIds += $storedId }
+    }
+    Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($AppRoot) -and $_.CommandLine.Contains("node_modules\next") } | ForEach-Object { $processIds += [int]$_.ProcessId }
+    foreach ($processId in ($processIds | Sort-Object -Unique)) {
+        Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+        Wait-Process -Id $processId -Timeout 10 -ErrorAction SilentlyContinue
+    }
+    Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
+}
