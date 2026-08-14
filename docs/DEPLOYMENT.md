@@ -35,7 +35,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\deployment\windows\Install-CreatorOS.ps1 -PublicUrl "http://localhost:3000"
 ```
 
-The installer validates configuration and Node, locates PostgreSQL client tools in `PATH` or the standard PostgreSQL installation directory, protects data and environment paths, installs locked dependencies, migrates and builds, registers both tasks, creates the public desktop shortcut, starts Creator OS, waits for healthy app/database status, and starts the first backup.
+The installer is safe to rerun after a partial attempt: it stops an existing app task before replacing locked dependencies and restarts the previous task if preparation fails. It validates configuration and Node, locates PostgreSQL client tools in `PATH` or the standard PostgreSQL installation directory, protects data and environment paths, installs locked dependencies, migrates and builds, registers both tasks, creates the public desktop shortcut, starts Creator OS, waits for healthy app/database status, and starts the first backup.
 
 The standard `C:\Program Files\PostgreSQL\<version>\bin` installation is discovered automatically. Do not copy database passwords into scripts.
 
