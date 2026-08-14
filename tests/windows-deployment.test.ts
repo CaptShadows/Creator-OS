@@ -11,4 +11,5 @@ describe("Windows production deployment",()=>{
   it("requires an explicit test database for restore verification",()=>{const script=read("Restore-Test-CreatorOS.ps1");expect(script).toContain('[Parameter(Mandatory)][string]$TestDatabaseUrl');expect(script).not.toContain('DATABASE_URL = $settings')});
   it("refuses long-lived bootstrap credentials",()=>expect(read("Install-CreatorOS.ps1")).toContain('Remove OWNER_EMAIL, OWNER_DISPLAY_NAME, and OWNER_PASSWORD'));
   it("supports the project Node engine and discovers standard PostgreSQL tools",()=>{expect(read("Install-CreatorOS.ps1")).toContain('$major -lt 22');expect(read("CreatorOS.Common.ps1")).toContain('PostgreSQL\\*\\bin')});
+  it("loads server settings for migration commands without printing them",()=>{const common=read("CreatorOS.Common.ps1"),installer=read("Install-CreatorOS.ps1");expect(common).toContain('SetEnvironmentVariable');expect(common).toContain('"Process"');expect(installer).toContain('Import-CreatorOSEnvironment');expect(installer).not.toContain('Write-Host $settings')});
 });

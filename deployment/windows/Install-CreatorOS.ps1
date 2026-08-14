@@ -9,7 +9,7 @@ param(
 Assert-Administrator
 $AppRoot = (Resolve-Path -LiteralPath $AppRoot).Path
 $environmentPath = Join-Path $AppRoot ".env.local"
-$settings = Get-CreatorOSEnvironment $environmentPath
+$settings = Import-CreatorOSEnvironment $environmentPath
 foreach ($required in @("DATABASE_URL", "ATTACHMENT_STORAGE_PATH")) { if (-not $settings.ContainsKey($required)) { throw "$required is missing from .env.local." } }
 if ($settings.ContainsKey("OWNER_PASSWORD")) { throw "Remove OWNER_EMAIL, OWNER_DISPLAY_NAME, and OWNER_PASSWORD from .env.local after owner bootstrap before production installation." }
 if (-not [IO.Path]::IsPathRooted($settings["ATTACHMENT_STORAGE_PATH"])) { throw "ATTACHMENT_STORAGE_PATH must be absolute." }
