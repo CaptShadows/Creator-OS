@@ -3,7 +3,7 @@
 ## Supported production shape
 
 - Host: dedicated Windows 11 computer
-- Runtime: Node.js 22.x and the locked Next.js version
+- Runtime: Node.js 22 or newer and the locked Next.js version
 - Database: local PostgreSQL running as its normal automatic Windows service
 - App manager: Task Scheduler task `CreatorOS-App`, running as `SYSTEM` at startup
 - Backup manager: Task Scheduler task `CreatorOS-Backup`, daily at 2:00 AM
@@ -20,7 +20,7 @@ Closing the browser or signing out does not stop Creator OS. The background task
 
 ## Preconditions
 
-1. Install Git, Node.js 22.x, PostgreSQL, and matching PostgreSQL client tools.
+1. Install Git, Node.js 22 or newer, PostgreSQL, and matching PostgreSQL client tools.
 2. Confirm PostgreSQL is configured to start automatically.
 3. Clone `CaptShadows/Creator-OS` into a dedicated production directory.
 4. Copy `.env.example` to `.env.local`, set real values, remove `OWNER_EMAIL`, `OWNER_DISPLAY_NAME`, and `OWNER_PASSWORD` after bootstrap, and never commit it. The installer refuses long-lived bootstrap credentials.
@@ -35,9 +35,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\deployment\windows\Install-CreatorOS.ps1 -PublicUrl "http://localhost:3000"
 ```
 
-The installer validates configuration and Node 22, protects data and environment paths, installs locked dependencies, migrates and builds, registers both tasks, creates the public desktop shortcut, starts Creator OS, waits for healthy app/database status, and starts the first backup.
+The installer validates configuration and Node, locates PostgreSQL client tools in `PATH` or the standard PostgreSQL installation directory, protects data and environment paths, installs locked dependencies, migrates and builds, registers both tasks, creates the public desktop shortcut, starts Creator OS, waits for healthy app/database status, and starts the first backup.
 
-If PostgreSQL tools are not on `PATH`, add its `bin` directory to the machine PATH first. Do not copy database passwords into scripts.
+The standard `C:\Program Files\PostgreSQL\<version>\bin` installation is discovered automatically. Do not copy database passwords into scripts.
 
 ## Administration
 

@@ -20,7 +20,7 @@ $pgDump = Resolve-CreatorOSTool "pg_dump.exe"
 $pgRestore = Resolve-CreatorOSTool "pg_restore.exe"
 $git = Resolve-CreatorOSTool "git.exe"
 $major = [int]((& $node --version).TrimStart("v").Split(".")[0])
-if ($major -ne 22) { throw "Creator OS production requires Node.js 22.x. Found $(& $node --version)." }
+if ($major -lt 22) { throw "Creator OS production requires Node.js 22 or newer. Found $(& $node --version)." }
 
 New-Item -ItemType Directory -Force -Path $DataRoot, (Join-Path $DataRoot "logs"), (Join-Path $DataRoot "backups"), $settings["ATTACHMENT_STORAGE_PATH"] | Out-Null
 Protect-CreatorOSPath $DataRoot

@@ -24,6 +24,10 @@ function Get-CreatorOSEnvironment([string]$Path) {
 
 function Resolve-CreatorOSTool([string]$Name) {
     $command = Get-Command $Name -ErrorAction SilentlyContinue
+    if (-not $command -and $Name -in @("pg_dump.exe", "pg_restore.exe")) {
+        $command = Get-ChildItem -Path (Join-Path $env:ProgramFiles "PostgreSQL\*\bin\$Name") -File -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1
+        if ($command) { return $command.FullName }
+    }
     if (-not $command) { throw "Required command is not installed or not on PATH: $Name" }
     return $command.Source
 }
