@@ -25,9 +25,17 @@ if ($major -lt 22) { throw "Creator OS production requires Node.js 22 or newer. 
 New-Item -ItemType Directory -Force -Path $DataRoot, (Join-Path $DataRoot "logs"), (Join-Path $DataRoot "backups"), $settings["ATTACHMENT_STORAGE_PATH"] | Out-Null
 Protect-CreatorOSPath $DataRoot
 Protect-CreatorOSPath $environmentPath
-Invoke-CreatorOSCommand $npm @("ci", "--prefix", $AppRoot)
-Invoke-CreatorOSCommand $npm @("run", "db:migrate", "--prefix", $AppRoot)
-Invoke-CreatorOSCommand $npm @("run", "build", "--prefix", $AppRoot)
+$existingAppTask = Get-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue
+$existingAppWasRunning = $existingAppTask -and $existingAppTask.State -eq "Running"
+if ($existingAppTask) { Stop-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue; Start-Sleep -Seconds 3 }
+try {
+    Invoke-CreatorOSCommand $npm @("ci", "--prefix", $AppRoot)
+    Invoke-CreatorOSCommand $npm @("run", "db:migrate", "--prefix", $AppRoot)
+    Invoke-CreatorOSCommand $npm @("run", "build", "--prefix", $AppRoot)
+} catch {
+    if ($existingAppWasRunning) { Start-ScheduledTask -TaskName "CreatorOS-App" -ErrorAction SilentlyContinue }
+    throw
+}
 
 $runScript = Join-Path $PSScriptRoot "Run-CreatorOS.ps1"
 $backupScript = Join-Path $PSScriptRoot "Backup-CreatorOS.ps1"
