@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs><linearGradient id="g" x1="8" y1="6" x2="56" y2="60" gradientUnits="userSpaceOnUse"><stop stop-color="#c36b89"/><stop offset="1" stop-color="#8f3f60"/></linearGradient></defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <path d="M18 18h28v28H18z" fill="none" stroke="#f4dfcf" stroke-width="2" opacity=".6"/>
+  <text x="32" y="39" text-anchor="middle" font-family="Georgia,serif" font-size="20" font-weight="700" fill="white">CO</text>
+</svg>

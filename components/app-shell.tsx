@@ -27,16 +27,16 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           <p className="eyebrow text-[0.625rem]">Tonya Wellness</p>
           <p className="mt-2 max-w-44 text-xs leading-5 text-[var(--muted)]">A calmer way to run the creator business.</p>
           <div className="mt-4"><ProfileControl /></div>
-          <form action={logoutAction}><button className="mt-4 min-h-11 text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent-strong)]" type="submit">Sign out</button></form>
+          <div className="mt-3 flex flex-wrap items-center gap-4"><Link href="/account" className="inline-flex min-h-11 items-center text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent-strong)]">Account</Link><form action={logoutAction}><button className="min-h-11 text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent-strong)]" type="submit">Sign out</button></form></div>
         </div>
       </aside>
 
       <div className="app-content min-w-0">
         <header className="app-mobile-header sticky top-0 z-10 min-h-16 items-center justify-between border-b border-[var(--line)] bg-[color:var(--surface)]/95 px-5 backdrop-blur">
           <Brand />
-          <div className="flex items-center gap-3"><ProfileControl compact /><SignOutButton compact /></div>
+          <div className="flex items-center gap-3"><Link href="/account" className="eyebrow text-[var(--accent)]">Account</Link><ProfileControl compact /><SignOutButton compact /></div>
         </header>
-        <header className="wall-header flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--surface)] px-10 py-5"><Brand /><nav aria-label="Wall primary" className="flex flex-wrap gap-2">{navigation.map((item) => <NavigationLink key={item.href} href={item.href} label={item.shortLabel} />)}</nav><div className="flex items-center gap-3"><ProfileControl compact/><SignOutButton compact/></div></header>
+        <header className="wall-header flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--surface)] px-10 py-5"><Brand /><nav aria-label="Wall primary" className="flex flex-wrap gap-2">{navigation.map((item) => <NavigationLink key={item.href} href={item.href} label={item.shortLabel} />)}</nav><div className="flex items-center gap-3"><Link href="/account" className="eyebrow text-[var(--accent)]">Account</Link><ProfileControl compact/><SignOutButton compact/></div></header>
         <main className="app-main mx-auto w-full max-w-7xl">{children}</main>
       </div>
 
