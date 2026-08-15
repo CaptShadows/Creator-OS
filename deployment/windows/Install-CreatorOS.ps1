@@ -52,13 +52,14 @@ Register-ScheduledTask -TaskName "CreatorOS-Backup" -Action $backupAction -Trigg
 
 $shortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.lnk"
 $shell = New-Object -ComObject WScript.Shell
+$iconPath = Join-Path $DataRoot "CreatorOS-v2.ico"
+$iconBase64 = Get-Content -LiteralPath (Join-Path $PSScriptRoot "CreatorOS.ico.b64") -Raw
+[IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconBase64))
+if (Test-Path -LiteralPath $shortcutPath) { Remove-Item -LiteralPath $shortcutPath -Force }
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = "$env:WINDIR\explorer.exe"
 $shortcut.Arguments = $PublicUrl
 $shortcut.Description = "Open Creator OS"
-$iconPath = Join-Path $DataRoot "CreatorOS.ico"
-$iconBase64 = Get-Content -LiteralPath (Join-Path $PSScriptRoot "CreatorOS.ico.b64") -Raw
-[IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconBase64))
 $shortcut.IconLocation = "$iconPath,0"
 $shortcut.Save()
 

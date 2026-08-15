@@ -19,11 +19,12 @@ try {
     Invoke-CreatorOSCommand $npm @("ci", "--prefix", $AppRoot)
     Invoke-CreatorOSCommand $npm @("run", "db:migrate", "--prefix", $AppRoot)
     Invoke-CreatorOSCommand $npm @("run", "build", "--prefix", $AppRoot)
-    $iconPath = Join-Path $DataRoot "CreatorOS.ico"
+    $iconPath = Join-Path $DataRoot "CreatorOS-v2.ico"
     $iconBase64 = Get-Content -LiteralPath (Join-Path $PSScriptRoot "CreatorOS.ico.b64") -Raw
     [IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconBase64))
     $shortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.lnk"
     $shell = New-Object -ComObject WScript.Shell
+    if (Test-Path -LiteralPath $shortcutPath) { Remove-Item -LiteralPath $shortcutPath -Force }
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = "$env:WINDIR\explorer.exe"
     $shortcut.Arguments = $PublicUrl
