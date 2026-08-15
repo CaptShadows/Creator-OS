@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 type Query = { emailChanged?: string; emailError?: string; passwordError?: string };
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<Query> }) {
-  const owner = await requireOwner();
+  const owner = await requireOwner("/account");
   const query = await searchParams;
   const emailError = query.emailError === "password" ? "Current password is incorrect." : query.emailError === "in-use" ? "That email is already in use." : query.emailError === "unchanged" ? "Enter a different email address." : query.emailError ? "Enter a valid email and current password." : null;
   const passwordError = query.passwordError === "current" ? "Current password is incorrect." : query.passwordError ? "Use a different password of at least 12 characters and enter it the same way twice." : null;

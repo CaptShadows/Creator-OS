@@ -13,7 +13,6 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 export function resolveAutomaticProfile(width: number): ClientProfile {
   if (width < 640) return "mobile";
   if (width < 1024) return "tablet";
-  if (width >= 1920) return "wall";
   return "desktop";
 }
 

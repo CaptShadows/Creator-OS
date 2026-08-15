@@ -39,8 +39,11 @@ export async function logoutOwner(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export async function requireOwner(): Promise<{ id: string; email: string; displayName: string }> {
+export async function requireOwner(returnTo?: string): Promise<{ id: string; email: string; displayName: string }> {
   const owner = await getCurrentOwner();
-  if (!owner) redirect("/login");
+  if (!owner) {
+    const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : undefined;
+    redirect(safeReturnTo ? `/login?next=${encodeURIComponent(safeReturnTo)}` : "/login");
+  }
   return owner;
 }

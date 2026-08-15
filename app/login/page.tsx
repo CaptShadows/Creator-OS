@@ -6,9 +6,10 @@ import { getCurrentOwner } from "@/lib/auth/server";
 export const metadata: Metadata = { title: "Sign in" };
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; passwordChanged?: string }> }) {
-  if (await getCurrentOwner()) redirect("/");
-  const { error, passwordChanged } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; passwordChanged?: string; next?: string }> }) {
+  const { error, passwordChanged, next } = await searchParams;
+  const nextPath = next?.startsWith("/") && !next.startsWith("//") ? next : "/";
+  if (await getCurrentOwner()) redirect(nextPath);
 
   return (
     <section className="mx-auto max-w-md py-12 lg:py-20">
@@ -18,6 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       {passwordChanged && <p role="status" className="mt-6 border border-green-300 bg-green-50 p-4 text-sm text-green-900">Password changed. Sign in with your new password.</p>}
       {error && <p role="alert" className="mt-6 border border-[var(--line)] bg-[var(--accent-soft)] p-4 text-sm text-[var(--accent-strong)]">{error === "invalid" ? "That email or password did not match." : "Creator OS cannot reach its database. Check service health and try again."}</p>}
       <form action={loginAction} className="luxury-card mt-7 grid gap-5 rounded-xl p-6">
+        <input type="hidden" name="next" value={nextPath} />
         <label className="grid gap-2 text-sm font-bold">Email<input name="email" type="email" autoComplete="username" required className="min-h-12 border border-[var(--line)] bg-white px-3 font-normal outline-none focus:border-[var(--accent-strong)]" /></label>
         <label className="grid gap-2 text-sm font-bold">Password<input name="password" type="password" autoComplete="current-password" required minLength={12} className="min-h-12 border border-[var(--line)] bg-white px-3 font-normal outline-none focus:border-[var(--accent-strong)]" /></label>
         <button type="submit" className="primary-action min-h-12 px-5 text-sm font-bold">Sign in</button>

@@ -13,7 +13,8 @@ describe("client profiles", () => {
     expect(resolveAutomaticProfile(390)).toBe("mobile");
     expect(resolveAutomaticProfile(800)).toBe("tablet");
     expect(resolveAutomaticProfile(1440)).toBe("desktop");
-    expect(resolveAutomaticProfile(1920)).toBe("wall");
+    expect(resolveAutomaticProfile(1920)).toBe("desktop");
+    expect(resolveAutomaticProfile(3840)).toBe("desktop");
   });
 
   it("persists a manual browser-only override across remounts", async () => {
