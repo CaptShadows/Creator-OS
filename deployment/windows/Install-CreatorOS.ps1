@@ -56,6 +56,10 @@ $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = "$env:WINDIR\explorer.exe"
 $shortcut.Arguments = $PublicUrl
 $shortcut.Description = "Open Creator OS"
+$iconPath = Join-Path $DataRoot "CreatorOS.ico"
+$iconBase64 = Get-Content -LiteralPath (Join-Path $PSScriptRoot "CreatorOS.ico.b64") -Raw
+[IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconBase64))
+$shortcut.IconLocation = "$iconPath,0"
 $shortcut.Save()
 
 Start-ScheduledTask -TaskName "CreatorOS-App"
