@@ -19,18 +19,17 @@ try {
     Invoke-CreatorOSCommand $npm @("ci", "--prefix", $AppRoot)
     Invoke-CreatorOSCommand $npm @("run", "db:migrate", "--prefix", $AppRoot)
     Invoke-CreatorOSCommand $npm @("run", "build", "--prefix", $AppRoot)
-    $iconPath = Join-Path $DataRoot "CreatorOS-v4.ico"
+    $publicIconDirectory = Join-Path $env:PUBLIC "Pictures\Creator OS"
+    New-Item -ItemType Directory -Force -Path $publicIconDirectory | Out-Null
+    $iconPath = Join-Path $publicIconDirectory "CreatorOS-v5.ico"
     $iconBase64 = Get-Content -LiteralPath (Join-Path $PSScriptRoot "CreatorOS.ico.b64") -Raw
     [IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconBase64))
-    $shortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.lnk"
-    $shell = New-Object -ComObject WScript.Shell
-    if (Test-Path -LiteralPath $shortcutPath) { Remove-Item -LiteralPath $shortcutPath -Force }
-    $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = "$env:WINDIR\explorer.exe"
-    $shortcut.Arguments = $PublicUrl
-    $shortcut.Description = "Open Creator OS"
-    $shortcut.IconLocation = "$iconPath,0"
-    $shortcut.Save()
+    $legacyShortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.lnk"
+    $shortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.url"
+    Remove-Item -LiteralPath $legacyShortcutPath -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $shortcutPath -Force -ErrorAction SilentlyContinue
+    $shortcutContent = "[InternetShortcut]`r`nURL=$PublicUrl`r`nIconFile=$iconPath`r`nIconIndex=0`r`n"
+    Set-Content -LiteralPath $shortcutPath -Value $shortcutContent -Encoding ASCII
     Set-Content -LiteralPath (Join-Path $DataRoot "known-good-commit.txt") -Value $previous
     Start-ScheduledTask -TaskName "CreatorOS-App"
     if (-not (Test-CreatorOSHealth "$PublicUrl/api/health" 12)) { throw "Updated application failed its health check. Roll back the application revision." }
