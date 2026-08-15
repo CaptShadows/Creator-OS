@@ -9,8 +9,13 @@ import { auditEvents, users } from "@/db/schema";
 import { postgresAuthStore } from "./postgres-store";
 import { issueSession, revokeSession, validateSession } from "./service";
 import { verifyPassword } from "./password";
+import { shouldUseSecureSessionCookie } from "./cookie-policy";
 
 export const SESSION_COOKIE = "creator_os_session";
+
+function setSessionCookie(cookieStore: Awaited<ReturnType<typeof cookies>>, token: string, expiresAt: Date): void {
+  cookieStore.set(SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: shouldUseSecureSessionCookie(process.env.NEXT_PUBLIC_APP_URL), path: "/", expires: expiresAt });
+}
 
 export async function authenticateOwner(email: string, password: string): Promise<boolean> {
   const [user] = await getDatabase().db.select().from(users).where(eq(users.email, email.trim().toLowerCase())).limit(1);
@@ -18,9 +23,17 @@ export async function authenticateOwner(email: string, password: string): Promis
 
   const { token, session } = await issueSession(postgresAuthStore, user.id);
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", expires: session.expiresAt });
+  setSessionCookie(cookieStore, token, session.expiresAt);
   await getDatabase().db.insert(auditEvents).values({ id: randomUUID(), actorUserId: user.id, eventType: "auth.login" });
   return true;
+}
+
+export async function rotateOwnerSession(userId: string): Promise<void> {
+  const cookieStore = await cookies();
+  const currentToken = cookieStore.get(SESSION_COOKIE)?.value;
+  if (currentToken) await revokeSession(postgresAuthStore, currentToken);
+  const { token, session } = await issueSession(postgresAuthStore, userId);
+  setSessionCookie(cookieStore, token, session.expiresAt);
 }
 
 export async function getCurrentOwner(): Promise<{ id: string; email: string; displayName: string } | null> {

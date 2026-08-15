@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { logoutOwner, requireOwner } from "@/lib/auth/server";
+import { logoutOwner, requireOwner, rotateOwnerSession } from "@/lib/auth/server";
 import { changeEmailSchema, changePasswordSchema } from "@/lib/account/contracts";
 import { changeOwnerEmail, changeOwnerPassword } from "@/lib/account/server";
 
@@ -13,6 +13,7 @@ export async function changeEmailAction(form: FormData): Promise<void> {
   if (result === "invalid-password") redirect("/account?emailError=password");
   if (result === "email-in-use") redirect("/account?emailError=in-use");
   if (result === "unchanged") redirect("/account?emailError=unchanged");
+  await rotateOwnerSession(owner.id);
   redirect("/account?emailChanged=1");
 }
 
