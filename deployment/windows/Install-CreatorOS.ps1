@@ -50,18 +50,17 @@ $backupAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $bac
 $backupTrigger = New-ScheduledTaskTrigger -Daily -At "2:00 AM"
 Register-ScheduledTask -TaskName "CreatorOS-Backup" -Action $backupAction -Trigger $backupTrigger -Settings (New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 4) -StartWhenAvailable -MultipleInstances IgnoreNew) -Principal $principal -Force | Out-Null
 
-$shortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.lnk"
-$shell = New-Object -ComObject WScript.Shell
-$iconPath = Join-Path $DataRoot "CreatorOS-v4.ico"
+$publicIconDirectory = Join-Path $env:PUBLIC "Pictures\Creator OS"
+New-Item -ItemType Directory -Force -Path $publicIconDirectory | Out-Null
+$iconPath = Join-Path $publicIconDirectory "CreatorOS-v5.ico"
 $iconBase64 = Get-Content -LiteralPath (Join-Path $PSScriptRoot "CreatorOS.ico.b64") -Raw
 [IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconBase64))
-if (Test-Path -LiteralPath $shortcutPath) { Remove-Item -LiteralPath $shortcutPath -Force }
-$shortcut = $shell.CreateShortcut($shortcutPath)
-$shortcut.TargetPath = "$env:WINDIR\explorer.exe"
-$shortcut.Arguments = $PublicUrl
-$shortcut.Description = "Open Creator OS"
-$shortcut.IconLocation = "$iconPath,0"
-$shortcut.Save()
+$legacyShortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.lnk"
+$shortcutPath = Join-Path $env:PUBLIC "Desktop\Creator OS.url"
+Remove-Item -LiteralPath $legacyShortcutPath -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $shortcutPath -Force -ErrorAction SilentlyContinue
+$shortcutContent = "[InternetShortcut]`r`nURL=$PublicUrl`r`nIconFile=$iconPath`r`nIconIndex=0`r`n"
+Set-Content -LiteralPath $shortcutPath -Value $shortcutContent -Encoding ASCII
 
 Start-ScheduledTask -TaskName "CreatorOS-App"
 if (-not (Test-CreatorOSHealth "$PublicUrl/api/health" 12)) { throw "Creator OS did not become healthy. Run Manage-CreatorOS.ps1 -Action Logs." }
