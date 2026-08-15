@@ -18,4 +18,5 @@ describe("Windows production deployment",()=>{
   it("allows SYSTEM to record the backup revision and logs hidden backup failures",()=>{const script=read("Backup-CreatorOS.ps1");expect(script).toContain('safe.directory=$AppRoot');expect(script).toContain('backup-latest.log');expect(script).toContain('Start-Transcript')});
   it("resolves the restore app root after script initialization",()=>{const script=read("Restore-Test-CreatorOS.ps1");expect(script).toContain('if (-not $AppRoot)');expect(script).toContain('Resolve-Path (Join-Path $PSScriptRoot "..\\..")')});
   it("uses the Creator OS icon for the public desktop shortcut",()=>{const script=read("Install-CreatorOS.ps1");expect(script).toContain('CreatorOS.ico.b64');expect(script).toContain('FromBase64String');expect(script).toContain('IconLocation')});
+  it("refreshes the Creator OS shortcut icon during updates",()=>{const script=read("Update-CreatorOS.ps1");expect(script).toContain('CreatorOS.ico.b64');expect(script).toContain('Creator OS.lnk');expect(script).toContain('IconLocation')});
 });
