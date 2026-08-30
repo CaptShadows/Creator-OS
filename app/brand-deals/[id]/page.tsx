@@ -85,12 +85,18 @@ export default async function Page({
             <S n="source" l="Source" v={d.source} a={sources} />
             <S n="dealType" l="Deal type" v={d.dealType} a={types} />
             <S n="status" l="Status" v={d.status} a={[...dealStatuses]} />
-            <S
-              n="priority"
-              l="Priority"
-              v={String(d.priority)}
-              a={["0", "1", "2"]}
-            />
+            <label className="grid gap-2 text-sm font-bold">
+              Priority
+              <select
+                name="priority"
+                defaultValue={String(d.priority)}
+                className="min-h-12 border border-[var(--line)] bg-white px-3 font-normal"
+              >
+                <option value="0">Low priority</option>
+                <option value="1">Medium priority</option>
+                <option value="2">High priority</option>
+              </select>
+            </label>
             <F n="startAt" l="Start date" type="date" v={iso(d.startAt)} />
             <F n="dueAt" l="Final due date" type="date" v={iso(d.dueAt)} />
             <TA n="notes" l="Notes" v={d.notes} />
