@@ -12,6 +12,10 @@ export function normalizeAttachmentMime(filename: string, mimeType: string) {
   return declared;
 }
 
+export function isValidAttachmentStorageKey(key: string) {
+  return /^[a-f0-9-]+\.(pdf|png|jpg|mp4|mov|webm)$/.test(key);
+}
+
 export function validatePdf(input: { filename: string; mimeType: string; bytes: Uint8Array }, maxBytes: number) {
   const lower=input.filename.toLowerCase(),pdf=lower.endsWith(".pdf")&&input.mimeType==="application/pdf",png=lower.endsWith(".png")&&input.mimeType==="image/png",jpeg=(lower.endsWith(".jpg")||lower.endsWith(".jpeg"))&&input.mimeType==="image/jpeg";
   if(!pdf&&!png&&!jpeg)throw new AttachmentValidationError("Only PDF, PNG, JPG, and JPEG files are supported.");

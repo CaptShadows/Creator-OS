@@ -2,6 +2,7 @@ import "server-only";
 
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { isValidAttachmentStorageKey } from "./validation";
 
 export interface AttachmentStorage {
   put(key: string, bytes: Uint8Array): Promise<void>;
@@ -28,7 +29,7 @@ export function getAttachmentConfig(env = process.env): AttachmentConfig {
 export class FileSystemAttachmentStorage implements AttachmentStorage {
   constructor(private readonly root: string) {}
   private path(key: string) {
-    if (!/^[a-f0-9-]+\.(pdf|mp4|mov|webm)$/.test(key)) throw new Error("Invalid attachment storage key");
+    if (!isValidAttachmentStorageKey(key)) throw new Error("Invalid attachment storage key");
     return resolve(this.root, key);
   }
   async put(key: string, bytes: Uint8Array) {
