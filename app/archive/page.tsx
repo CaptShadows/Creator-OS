@@ -6,14 +6,16 @@ import { listProducts, listSamples } from "@/lib/samples/repository";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { restoreCampaignAction, restoreContentAction, restoreProductAction, restoreSampleAction } from "./actions";
+import { restoreBrandDealAction } from "@/app/brand-deals/actions";
+import { listBrandDeals } from "@/lib/brand-deals/repository";
 
 export const dynamic="force-dynamic";
-const categories=[{key:"all",label:"All"},{key:"content",label:"Content"},{key:"campaigns",label:"Campaigns"},{key:"products",label:"Products"}] as const;
+const categories=[{key:"all",label:"All"},{key:"content",label:"Content"},{key:"campaigns",label:"Campaigns"},{key:"brand-deals",label:"Brand Deals"},{key:"products",label:"Products"}] as const;
 type Category=(typeof categories)[number]["key"];
 
 export default async function ArchivePage({searchParams}:{searchParams:Promise<{category?:string;q?:string}>}){
   const owner=await requireOwner(),query=await searchParams,category=(categories.some(x=>x.key===query.category)?query.category:"all") as Category,search=(query.q||"").trim().toLowerCase();
-  const [content,campaigns,products,samples]=await Promise.all([listOwnerContent(owner.id,true),listCampaigns(owner.id,true),listProducts(owner.id,true),listSamples(owner.id,"all",true)]);
+  const [content,campaigns,deals,products,samples]=await Promise.all([listOwnerContent(owner.id,true),listCampaigns(owner.id,true),listBrandDeals(owner.id,"archived"),listProducts(owner.id,true),listSamples(owner.id,"all",true)]);
   const match=(value:string)=>!search||value.toLowerCase().includes(search);
   const productItems=[
     ...products.filter(x=>match(x.product.name)).map(x=>({id:x.product.id,name:x.product.name,meta:x.product.category||"Uncategorized",href:`/products/${x.product.id}`,action:restoreProductAction})),
@@ -22,6 +24,7 @@ export default async function ArchivePage({searchParams}:{searchParams:Promise<{
   const sections=[
     {key:"content",label:"Content",items:content.filter(x=>match(x.title)).map(x=>({id:x.id,name:x.title,meta:x.status,href:`/create/${x.id}`,action:restoreContentAction}))},
     {key:"campaigns",label:"Campaigns",items:campaigns.filter(x=>match(`${x.campaign.name} ${x.brandName||""}`)).map(x=>({id:x.campaign.id,name:x.campaign.name,meta:x.brandName||x.campaign.status,href:`/campaigns/${x.campaign.id}`,action:restoreCampaignAction}))},
+    {key:"brand-deals",label:"Brand Deals",items:deals.filter(x=>match(`${x.deal.title} ${x.brandName||""}`)).map(x=>({id:x.deal.id,name:x.deal.title,meta:x.brandName||x.deal.status,href:`/brand-deals/${x.deal.id}`,action:restoreBrandDealAction}))},
     {key:"products",label:"Products",items:productItems}
   ].filter(section=>category==="all"||section.key===category);
   const count=sections.reduce((sum,section)=>sum+section.items.length,0);

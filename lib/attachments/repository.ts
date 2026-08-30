@@ -2,14 +2,14 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, eq, isNotNull, isNull, like, notLike } from "drizzle-orm";
 import { getDatabase } from "@/db/client";
-import { attachmentLinks, attachments, auditEvents, campaigns, contents, deliverables, products, samples } from "@/db/schema";
+import { attachmentLinks, attachments, auditEvents, brandDeals, campaigns, contents, deliverables, products, samples } from "@/db/schema";
 import type { AttachmentStorage } from "./storage";
 import { safeDisplayFilename, safeVideoFilename, validatePdf, validateVideo } from "./validation";
 
-export type AttachmentTarget = { type: "content"|"campaign"|"deliverable"|"product"|"sample"; id: string };
+export type AttachmentTarget = { type: "content"|"campaign"|"deliverable"|"product"|"sample"|"brandDeal"; id: string };
 export type AttachmentKind = "pdf" | "video";
-const targets = { content: contents, campaign: campaigns, deliverable: deliverables, product: products, sample: samples } as const;
-const linkColumns = { content: "contentId", campaign: "campaignId", deliverable: "deliverableId", product: "productId", sample: "sampleId" } as const;
+const targets = { content: contents, campaign: campaigns, deliverable: deliverables, product: products, sample: samples, brandDeal: brandDeals } as const;
+const linkColumns = { content: "contentId", campaign: "campaignId", deliverable: "deliverableId", product: "productId", sample: "sampleId", brandDeal: "brandDealId" } as const;
 
 export async function assertOwnedTarget(ownerUserId: string, target: AttachmentTarget) {
   const table = targets[target.type];
@@ -19,7 +19,7 @@ export async function assertOwnedTarget(ownerUserId: string, target: AttachmentT
 
 export async function createAttachment(ownerUserId:string,target:AttachmentTarget,file:{filename:string;mimeType:string;bytes:Uint8Array},storage:AttachmentStorage,maxBytes:number,kind:AttachmentKind="pdf"){
   await assertOwnedTarget(ownerUserId,target);
-  const originalFilename=kind==="video"?safeVideoFilename(file.filename,file.mimeType):safeDisplayFilename(file.filename),checksumSha256=kind==="video"?validateVideo(file,maxBytes):validatePdf(file,maxBytes),id=randomUUID(),extension=kind==="video"?(file.mimeType==="video/mp4"?"mp4":file.mimeType==="video/quicktime"?"mov":"webm"):"pdf",storageKey=`${id}.${extension}`;
+  const originalFilename=kind==="video"?safeVideoFilename(file.filename,file.mimeType):safeDisplayFilename(file.filename),checksumSha256=kind==="video"?validateVideo(file,maxBytes):validatePdf(file,maxBytes),id=randomUUID(),extension=kind==="video"?(file.mimeType==="video/mp4"?"mp4":file.mimeType==="video/quicktime"?"mov":"webm"):file.mimeType==="image/png"?"png":file.mimeType==="image/jpeg"?"jpg":"pdf",storageKey=`${id}.${extension}`;
   await storage.put(storageKey,file.bytes);
   try { await getDatabase().db.transaction(async tx=>{
     await tx.insert(attachments).values({id,ownerUserId,originalFilename,storageKey,mimeType:file.mimeType,sizeBytes:file.bytes.byteLength,checksumSha256});

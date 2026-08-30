@@ -3,7 +3,7 @@ import { createAttachment, type AttachmentKind, type AttachmentTarget } from "@/
 import { configuredAttachmentStorage } from "@/lib/attachments/storage";
 import { AttachmentValidationError } from "@/lib/attachments/validation";
 
-const targetTypes = new Set(["content","campaign","deliverable","product","sample"]);
+const targetTypes = new Set(["content","campaign","deliverable","product","sample","brandDeal"]);
 function redirectBack(request:Request,value:FormDataEntryValue|null,status:string){const url=new URL(typeof value==="string"&&value.startsWith("/")?value:"/",request.url);url.searchParams.set("attachment",status);return Response.redirect(url,303);}
 
 export async function POST(request:Request){

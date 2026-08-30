@@ -36,6 +36,13 @@
       "when": 1786582777590,
       "tag": "0004_pretty_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788051193493,
+      "tag": "0005_sloppy_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }
