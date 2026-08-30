@@ -64,6 +64,34 @@ export default async function CalendarPage({
           }),
         ),
       ),
+      ...data.brandDealRows.flatMap((deal) =>
+        [
+          {
+            date: deal.paymentDueAt,
+            label: `Brand payment due · ${deal.title}`,
+          },
+          {
+            date: deal.contractSignedAt,
+            label: `Contract signed · ${deal.title}`,
+          },
+          {
+            date: deal.exclusivityStartAt,
+            label: `Exclusivity starts · ${deal.title}`,
+          },
+          {
+            date: deal.exclusivityEndAt,
+            label: `Exclusivity ends · ${deal.title}`,
+          },
+          { date: deal.invoiceDate, label: `Invoice · ${deal.title}` },
+        ]
+          .filter(
+            (event): event is { date: Date; label: string } =>
+              Boolean(event.date) &&
+              event.date! >= range.start &&
+              event.date! < range.end,
+          )
+          .map((event) => ({ ...event, href: `/brand-deals/${deal.id}` })),
+      ),
       ...data.brandDealDeliverableRows.map((deliverable) => ({
         date: deliverable.dueAt!,
         label: `Deal deliverable · ${deliverable.title}`,

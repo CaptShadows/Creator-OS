@@ -168,6 +168,26 @@ export async function getCalendarProjection(
                   gte(brandDeals.dueAt, start),
                   lt(brandDeals.dueAt, end),
                 ),
+                and(
+                  gte(brandDeals.paymentDueAt, start),
+                  lt(brandDeals.paymentDueAt, end),
+                ),
+                and(
+                  gte(brandDeals.contractSignedAt, start),
+                  lt(brandDeals.contractSignedAt, end),
+                ),
+                and(
+                  gte(brandDeals.exclusivityStartAt, start),
+                  lt(brandDeals.exclusivityStartAt, end),
+                ),
+                and(
+                  gte(brandDeals.exclusivityEndAt, start),
+                  lt(brandDeals.exclusivityEndAt, end),
+                ),
+                and(
+                  gte(brandDeals.invoiceDate, start),
+                  lt(brandDeals.invoiceDate, end),
+                ),
               ),
             ),
           )
@@ -268,16 +288,14 @@ export async function schedulePublication(
         ),
       );
   else
-    await db
-      .insert(publications)
-      .values({
-        id: crypto.randomUUID(),
-        ownerUserId: owner,
-        contentId,
-        platformAccountId: accountId,
-        status: "scheduled",
-        scheduledAt: date,
-      });
+    await db.insert(publications).values({
+      id: crypto.randomUUID(),
+      ownerUserId: owner,
+      contentId,
+      platformAccountId: accountId,
+      status: "scheduled",
+      scheduledAt: date,
+    });
   return true;
 }
 export async function reschedulePublication(
@@ -308,16 +326,14 @@ export async function permanentlyDeletePublication(owner: string, id: string) {
     await tx
       .delete(publications)
       .where(and(eq(publications.ownerUserId, owner), eq(publications.id, id)));
-    await tx
-      .insert(auditEvents)
-      .values({
-        id: randomUUID(),
-        actorUserId: owner,
-        eventType: "publication.permanently_deleted",
-        entityType: "publication",
-        entityId: id,
-        metadata: { confirmation: "two_step" },
-      });
+    await tx.insert(auditEvents).values({
+      id: randomUUID(),
+      actorUserId: owner,
+      eventType: "publication.permanently_deleted",
+      entityType: "publication",
+      entityId: id,
+      metadata: { confirmation: "two_step" },
+    });
     return true;
   });
 }
