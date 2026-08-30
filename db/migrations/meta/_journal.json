@@ -50,6 +50,13 @@
       "when": 1788054082728,
       "tag": "0006_illegal_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788055733325,
+      "tag": "0007_flashy_gertrude_yorkes",
+      "breakpoints": true
     }
   ]
 }

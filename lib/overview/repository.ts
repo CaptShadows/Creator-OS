@@ -55,7 +55,7 @@ export async function getOverview(owner: string, now = new Date()) {
         )
         .orderBy(asc(campaigns.dueAt)),
       db
-        .select({ sample: samples, productName: products.name })
+        .select({ sample: samples, productName: products.name, productPriority: products.priority })
         .from(samples)
         .innerJoin(products, eq(samples.productId, products.id))
         .where(
@@ -94,9 +94,7 @@ export async function getOverview(owner: string, now = new Date()) {
         ...(byProduct.get(row.sample.productId) ?? []),
         ...(directContent ? [directContent] : []),
       ];
-      const effectivePriority = effectiveSamplePriority(
-        linked.map((item) => item.priority),
-      );
+      const effectivePriority = linked.length ? Math.max(row.productPriority, effectiveSamplePriority(linked.map((item) => item.priority))) : row.productPriority;
       const actionDate =
         [
           row.sample.expectedDeliveryAt,

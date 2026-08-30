@@ -356,6 +356,7 @@ export const products = pgTable(
     name: text("name").notNull(),
     category: text("category"),
     notes: text("notes"),
+    priority: integer("priority").default(1).notNull(),
     active: boolean("active").default(true).notNull(),
     ...timestamps,
   },
