@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "priority" integer DEFAULT 1 NOT NULL;
