@@ -6,8 +6,9 @@ const optionalText = (max: number) => z.string().max(max).nullable();
 export const contentPrioritySchema = z.enum(contentPriorityValues);
 
 export const quickIdeaSchema = z.object({ idea: z.string().trim().min(1, "Write the idea first.").max(10_000), priority: contentPrioritySchema.default("medium") });
+export const contentPriorityUpdateSchema = z.object({ contentId: z.string().uuid(), priority: contentPrioritySchema });
 export const contentAutosaveSchema = z.object({
-  title: z.string().trim().min(1).max(200), concept: optionalText(10_000), hook: optionalText(10_000), script: optionalText(50_000), caption: optionalText(20_000), notes: optionalText(20_000), contentType: optionalText(100), contentPillar: optionalText(100), priority: contentPrioritySchema,
+  title: z.string().trim().min(1).max(200), concept: optionalText(10_000), hook: optionalText(10_000), script: optionalText(50_000), caption: optionalText(20_000), notes: optionalText(20_000), contentType: optionalText(100), contentPillar: optionalText(100),
   baseUpdatedAt: z.string().datetime(),
 });
 export const contentTransitionSchema = z.object({ contentId: z.string().uuid(), to: contentStatusSchema });
