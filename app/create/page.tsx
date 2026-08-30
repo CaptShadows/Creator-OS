@@ -3,7 +3,7 @@ import { createIdeaAction, recoverContentAction } from "./actions";
 import { requireOwner } from "@/lib/auth/server";
 import { listOwnerContent } from "@/lib/content/repository";
 import { contentStatusLabels } from "@/lib/content/lifecycle";
-import { contentPriorityLabels, contentPriorityValues, priorityFromScore, priorityScore, type ContentPriority } from "@/lib/content/priority";
+import { contentPriorityLabels, contentPriorityValues, priorityFromScore, type ContentPriority } from "@/lib/content/priority";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
