@@ -41,8 +41,12 @@ export async function getContentEditorData(ownerUserId: string, id: string) {
 }
 
 export async function autosaveContent(ownerUserId: string, id: string, input: ContentAutosaveInput): Promise<{ updatedAt: Date } | null> {
-  const [updated] = await getDatabase().db.update(contents).set({ title: input.title, concept: input.concept, hook: input.hook, script: input.script, caption: input.caption, notes: input.notes, contentType: input.contentType, contentPillar: input.contentPillar, priority: priorityScore(input.priority), updatedAt: new Date() }).where(and(eq(contents.id, id), eq(contents.ownerUserId, ownerUserId), eq(contents.updatedAt, new Date(input.baseUpdatedAt)), isNull(contents.archivedAt))).returning({ updatedAt: contents.updatedAt });
+  const [updated] = await getDatabase().db.update(contents).set({ title: input.title, concept: input.concept, hook: input.hook, script: input.script, caption: input.caption, notes: input.notes, contentType: input.contentType, contentPillar: input.contentPillar, updatedAt: new Date() }).where(and(eq(contents.id, id), eq(contents.ownerUserId, ownerUserId), eq(contents.updatedAt, new Date(input.baseUpdatedAt)), isNull(contents.archivedAt))).returning({ updatedAt: contents.updatedAt });
   return updated ?? null;
+}
+
+export async function updateContentPriority(ownerUserId:string,id:string,priority:ContentPriority){
+  await getDatabase().db.update(contents).set({priority:priorityScore(priority),updatedAt:new Date()}).where(and(eq(contents.id,id),eq(contents.ownerUserId,ownerUserId)));
 }
 
 export async function transitionContent(ownerUserId: string, id: string, to: ContentStatus): Promise<boolean> {
