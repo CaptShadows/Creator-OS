@@ -108,7 +108,7 @@ A campaign with five required videos must visibly show completion progress and r
 
 ### Brand deals
 
-Brand Deals is the commercial workspace for partnerships: contacts, contract and usage rights, exclusivity, compensation, invoices, payment status, and independently tracked deliverables. Campaigns remain the execution and scheduling layer. A deal can link to multiple existing campaigns, products, samples, and content records without copying or deleting those records, and campaigns may still exist without a deal.
+Brand Deals is the commercial workspace for partnerships: contacts, contract and usage rights, exclusivity, compensation, invoices, payment status, and independently tracked deliverables. Campaigns remain the execution and scheduling layer. A deal can link to multiple existing campaigns, products (including their sample workflow), and content records without copying or deleting those records, and campaigns may still exist without a deal. Samples are never presented as a second business object beside their product.
 
 ### Sample workflow
 
