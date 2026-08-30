@@ -36,6 +36,13 @@
       "when": 1786582777590,
       "tag": "0004_pretty_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788050000000,
+      "tag": "0005_content_priority",
+      "breakpoints": true
     }
   ]
 }
