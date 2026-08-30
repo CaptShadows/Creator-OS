@@ -7,11 +7,12 @@ import { attachmentLinks, auditEvents, campaigns, contentCampaigns, contentProdu
 import { canTransitionContent } from "./lifecycle";
 import type { ContentStatus } from "@/lib/domain/contracts";
 import type { ContentAutosaveInput } from "./contracts";
+import { priorityScore, type ContentPriority } from "./priority";
 
-export async function createQuickIdea(ownerUserId: string, idea: string): Promise<string> {
+export async function createQuickIdea(ownerUserId: string, idea: string, priority: ContentPriority = "medium"): Promise<string> {
   const id = randomUUID();
   const title = idea.split(/\r?\n/)[0].trim().slice(0, 200) || "Untitled idea";
-  await getDatabase().db.insert(contents).values({ id, ownerUserId, title, concept: idea, status: "idea" });
+  await getDatabase().db.insert(contents).values({ id, ownerUserId, title, concept: idea, status: "idea", priority: priorityScore(priority) });
   return id;
 }
 
@@ -40,7 +41,7 @@ export async function getContentEditorData(ownerUserId: string, id: string) {
 }
 
 export async function autosaveContent(ownerUserId: string, id: string, input: ContentAutosaveInput): Promise<{ updatedAt: Date } | null> {
-  const [updated] = await getDatabase().db.update(contents).set({ title: input.title, concept: input.concept, hook: input.hook, script: input.script, caption: input.caption, notes: input.notes, contentType: input.contentType, contentPillar: input.contentPillar, updatedAt: new Date() }).where(and(eq(contents.id, id), eq(contents.ownerUserId, ownerUserId), eq(contents.updatedAt, new Date(input.baseUpdatedAt)), isNull(contents.archivedAt))).returning({ updatedAt: contents.updatedAt });
+  const [updated] = await getDatabase().db.update(contents).set({ title: input.title, concept: input.concept, hook: input.hook, script: input.script, caption: input.caption, notes: input.notes, contentType: input.contentType, contentPillar: input.contentPillar, priority: priorityScore(input.priority), updatedAt: new Date() }).where(and(eq(contents.id, id), eq(contents.ownerUserId, ownerUserId), eq(contents.updatedAt, new Date(input.baseUpdatedAt)), isNull(contents.archivedAt))).returning({ updatedAt: contents.updatedAt });
   return updated ?? null;
 }
 
