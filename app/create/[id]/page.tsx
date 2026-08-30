@@ -27,10 +27,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ContentDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{attachmentError?:string;attachment?:string}>;
 }) {
   const owner = await requireOwner();
+  const query = await searchParams;
   const data = await getContentEditorData(owner.id, (await params).id);
   if (!data) notFound();
   const { content } = data;
@@ -172,6 +175,8 @@ export default async function ContentDetailPage({
         ownerUserId={owner.id}
         target={{ type: "content", id: content.id }}
         returnTo={`/create/${content.id}`}
+        error={query.attachmentError}
+        uploaded={query.attachment==="uploaded"}
       />
       <div className="flex justify-between border-t border-[var(--line)] pt-6">
         <form

@@ -13,8 +13,9 @@ import { addListingAction, archiveProductAction, permanentlyDeleteProductAction,
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProductPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{attachmentError?:string;attachment?:string}> }) {
   const owner = await requireOwner(), data = await getProductWorkspace(owner.id, (await params).id);
+  const query = await searchParams;
   if (!data) notFound();
   const product = data.product, returnTo = `/products/${data.product.id}`;
   return <section className="space-y-8">
@@ -25,7 +26,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <SurfaceCard><h2 className="display-heading text-2xl">Platform listings</h2><p className="mt-2 text-sm text-[var(--muted)]">One product can have multiple channel listings without duplication.</p><div className="mt-5 grid gap-3">{data.listings.map(listing => <div key={listing.id} className="border border-[var(--line)] p-4"><strong>{listing.platform}</strong><p className="text-sm text-[var(--muted)]">{listing.externalProductId || listing.externalUrl || "Listing saved"}</p></div>)}</div><form action={addListingAction} className="mt-6 grid gap-4 md:grid-cols-2"><input type="hidden" name="productId" value={product.id} /><Input label="Platform" name="platform" required /><Input label="Product ID" name="externalProductId" /><Input label="Product URL" name="externalUrl" /><Input label="Affiliate URL" name="affiliateUrl" /><Submit label="Add listing" /></form></SurfaceCard>
     <SurfaceCard><h2 className="display-heading text-2xl">Samples</h2><div className="mt-5 grid gap-3">{data.samples.map(sample => <Link key={sample.id} href={`/products/samples/${sample.id}`} className="flex justify-between border border-[var(--line)] p-4"><span>{sample.sourcePlatform || "Unspecified source"}</span><StatusBadge>{sampleStatusLabels[sample.status]}</StatusBadge></Link>)}</div></SurfaceCard>
     <ProductVideoPanel ownerUserId={owner.id} productId={product.id} returnTo={returnTo} />
-    <AttachmentPanel ownerUserId={owner.id} target={{ type: "product", id: product.id }} returnTo={returnTo} />
+    <AttachmentPanel ownerUserId={owner.id} target={{ type: "product", id: product.id }} returnTo={returnTo} error={query.attachmentError} uploaded={query.attachment==="uploaded"} />
     <div className="flex justify-between border-t border-[var(--line)] pt-6"><form action={product.archivedAt ? recoverProductAction : archiveProductAction}><input type="hidden" name="productId" value={product.id} /><button className="min-h-12 text-sm font-bold text-[var(--accent-strong)]">{product.archivedAt ? "Restore product" : "Archive product"}</button></form><ConfirmDeleteDialog id={product.id} name={product.name} entity="product" inputName="productId" action={permanentlyDeleteProductAction} /></div>
   </section>;
 }

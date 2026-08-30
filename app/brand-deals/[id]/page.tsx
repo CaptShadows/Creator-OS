@@ -39,7 +39,7 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ deleteError?: string }>;
+  searchParams: Promise<{ deleteError?: string; attachmentError?: string; attachment?: string }>;
 }) {
   const o = await requireOwner(),
     { id } = await params,
@@ -332,6 +332,8 @@ export default async function Page({
         ownerUserId={o.id}
         target={{ type: "brandDeal", id }}
         returnTo={`/brand-deals/${id}`}
+        error={q.attachmentError}
+        uploaded={q.attachment==="uploaded"}
       />
       <SurfaceCard>
         <h2 className="font-bold">Record controls</h2>

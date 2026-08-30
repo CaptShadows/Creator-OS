@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AttachmentValidationError,
+  normalizeAttachmentMime,
   safeDisplayFilename,
   safeVideoFilename,
   validatePdf,
@@ -62,6 +63,12 @@ describe("PDF attachment validation", () => {
         1024,
       ),
     ).toMatch(/^[a-f0-9]{64}$/);
+  });
+  it("normalizes common browser JPG MIME variants before validation", () => {
+    expect(normalizeAttachmentMime("photo.jpg", "image/jpg")).toBe("image/jpeg");
+    expect(normalizeAttachmentMime("photo.jpeg", "image/pjpeg")).toBe("image/jpeg");
+    expect(normalizeAttachmentMime("photo.jpg", "application/octet-stream")).toBe("image/jpeg");
+    expect(normalizeAttachmentMime("photo.jpg", "")).toBe("image/jpeg");
   });
   it("uses a relative redirect and never exposes the bind address", () => {
     const response = attachmentRedirect(

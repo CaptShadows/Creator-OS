@@ -5,7 +5,7 @@ import {
   type AttachmentTarget,
 } from "@/lib/attachments/repository";
 import { configuredAttachmentStorage } from "@/lib/attachments/storage";
-import { AttachmentValidationError } from "@/lib/attachments/validation";
+import { AttachmentValidationError, normalizeAttachmentMime } from "@/lib/attachments/validation";
 import { attachmentRedirect } from "@/lib/attachments/redirect";
 
 const targetTypes = new Set([
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       { type: targetType as AttachmentTarget["type"], id: targetId },
       {
         filename: file.name,
-        mimeType: file.type,
+        mimeType: kind === "video" ? file.type : normalizeAttachmentMime(file.name, file.type),
         bytes: new Uint8Array(await file.arrayBuffer()),
       },
       storage,
