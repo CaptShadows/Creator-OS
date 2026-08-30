@@ -2,6 +2,8 @@ import "server-only";
 import { and, asc, eq, inArray, isNull, lte, ne } from "drizzle-orm";
 import { getDatabase } from "@/db/client";
 import {
+  brandDealDeliverables,
+  brandDeals,
   campaigns,
   compensations,
   contentProducts,
@@ -24,7 +26,7 @@ export async function getOverview(owner: string, now = new Date()) {
   todayEnd.setUTCHours(23, 59, 59, 999);
   const soon = new Date(todayEnd);
   soon.setUTCDate(soon.getUTCDate() + 7);
-  const [content, ds, cs, ss, comps, pays, productContentLinks] =
+  const [content, ds, cs, ss, comps, pays, productContentLinks, deals, dealDs] =
     await Promise.all([
       db
         .select()
@@ -55,7 +57,11 @@ export async function getOverview(owner: string, now = new Date()) {
         )
         .orderBy(asc(campaigns.dueAt)),
       db
-        .select({ sample: samples, productName: products.name, productPriority: products.priority })
+        .select({
+          sample: samples,
+          productName: products.name,
+          productPriority: products.priority,
+        })
         .from(samples)
         .innerJoin(products, eq(samples.productId, products.id))
         .where(
@@ -75,6 +81,21 @@ export async function getOverview(owner: string, now = new Date()) {
         .select()
         .from(contentProducts)
         .where(eq(contentProducts.ownerUserId, owner)),
+      db
+        .select()
+        .from(brandDeals)
+        .where(
+          and(eq(brandDeals.ownerUserId, owner), isNull(brandDeals.archivedAt)),
+        ),
+      db
+        .select()
+        .from(brandDealDeliverables)
+        .where(
+          and(
+            eq(brandDealDeliverables.ownerUserId, owner),
+            ne(brandDealDeliverables.status, "completed"),
+          ),
+        ),
     ]);
   const byId = new Map(content.map((c) => [c.id, c]));
   const byProduct = new Map<string, typeof content>();
@@ -94,7 +115,12 @@ export async function getOverview(owner: string, now = new Date()) {
         ...(byProduct.get(row.sample.productId) ?? []),
         ...(directContent ? [directContent] : []),
       ];
-      const effectivePriority = linked.length ? Math.max(row.productPriority, effectiveSamplePriority(linked.map((item) => item.priority))) : row.productPriority;
+      const effectivePriority = linked.length
+        ? Math.max(
+            row.productPriority,
+            effectiveSamplePriority(linked.map((item) => item.priority)),
+          )
+        : row.productPriority;
       const actionDate =
         [
           row.sample.expectedDeliveryAt,
@@ -136,6 +162,44 @@ export async function getOverview(owner: string, now = new Date()) {
     }
   }
   return {
+    brandDeals: {
+      active: deals.filter(
+        (deal) =>
+          !["paid", "completed", "declined", "cancelled"].includes(deal.status),
+      ).length,
+      dueSoon: dealDs.filter(
+        (item) =>
+          item.dueAt &&
+          item.dueAt <= soon &&
+          !["approved", "posted", "completed"].includes(item.status),
+      ).length,
+      awaitingPayment: deals.filter(
+        (deal) =>
+          deal.status === "awaiting_payment" ||
+          ["expected", "overdue", "partial"].includes(deal.paymentStatus),
+      ).length,
+      activeValueCents: deals
+        .filter(
+          (deal) =>
+            !["paid", "completed", "declined", "cancelled"].includes(
+              deal.status,
+            ),
+        )
+        .reduce((total, deal) => total + (deal.fixedCompensationCents ?? 0), 0),
+      receivedCents: deals.reduce(
+        (total, deal) => total + deal.amountReceivedCents,
+        0,
+      ),
+      outstandingCents: deals.reduce(
+        (total, deal) =>
+          total +
+          Math.max(
+            0,
+            (deal.fixedCompensationCents ?? 0) - deal.amountReceivedCents,
+          ),
+        0,
+      ),
+    },
     filmToday: rankFilmToday(candidates).slice(0, 8),
     due: ds.map((d) => ({
       id: d.id,

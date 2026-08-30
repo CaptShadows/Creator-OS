@@ -144,6 +144,70 @@ export default async function OverviewPage() {
         </Link>
       </SurfaceCard>
     ),
+    "brand-deals": (
+      <SurfaceCard>
+        <h2 className="display-heading text-2xl">Active Brand Deals</h2>
+        <p className="mt-5 text-3xl font-bold">{data.brandDeals.active}</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">
+          {money(data.brandDeals.activeValueCents)} in active fixed-fee work.
+        </p>
+        <Link
+          href="/brand-deals"
+          className="mt-5 inline-block text-sm font-bold text-[var(--accent-strong)]"
+        >
+          Review deals →
+        </Link>
+      </SurfaceCard>
+    ),
+    "brand-deal-due": (
+      <SurfaceCard>
+        <h2 className="display-heading text-2xl">Brand Deliverables Due</h2>
+        <p className="mt-5 text-3xl font-bold">{data.brandDeals.dueSoon}</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">
+          Incomplete deal deliverables due within seven days.
+        </p>
+        <Link
+          href="/brand-deals?view=due_soon"
+          className="mt-5 inline-block text-sm font-bold text-[var(--accent-strong)]"
+        >
+          Review deadlines →
+        </Link>
+      </SurfaceCard>
+    ),
+    "brand-deal-payments": (
+      <SurfaceCard>
+        <h2 className="display-heading text-2xl">Brand Payments Due</h2>
+        <p className="mt-5 text-3xl font-bold">
+          {data.brandDeals.awaitingPayment}
+        </p>
+        <p className="mt-2 text-sm text-[var(--muted)]">
+          {money(data.brandDeals.outstandingCents)} outstanding.
+        </p>
+        <Link
+          href="/brand-deals?view=awaiting_payment"
+          className="mt-5 inline-block text-sm font-bold text-[var(--accent-strong)]"
+        >
+          Review payments →
+        </Link>
+      </SurfaceCard>
+    ),
+    "brand-deal-revenue": (
+      <SurfaceCard>
+        <h2 className="display-heading text-2xl">Brand Deal Revenue</h2>
+        <p className="mt-5 text-3xl font-bold">
+          {money(data.brandDeals.receivedCents)}
+        </p>
+        <p className="mt-2 text-sm text-[var(--muted)]">
+          Recorded cash received from brand deals.
+        </p>
+        <Link
+          href="/brand-deals?view=completed"
+          className="mt-5 inline-block text-sm font-bold text-[var(--accent-strong)]"
+        >
+          Review completed deals →
+        </Link>
+      </SurfaceCard>
+    ),
     health: (
       <SurfaceCard>
         <h2 className="display-heading text-2xl">Platform / Sync Health</h2>
