@@ -12,7 +12,7 @@ Additional delivered capabilities:
 - authenticated host-backed attachments (#23)
 - PDF, PNG, JPG, and JPEG uploads with safe remote redirects (#68, #76, #80, #81)
 - content/product priorities and priority-ordered Samples Needing Action (#71, #76–#79)
-- Brand Deals core workspace (#70, #74–#75); calendar, Overview-summary, and selective migration criteria remain open in #70
+- Brand Deals workspace with Calendar milestones, optional Overview summaries, and selective campaign migration (#70, #74–#75, #82–#83)
 - confirmed deletion, duplicate warnings, archive/recovery, account settings, Windows desktop shortcut, and background deployment
 
 Live external platform adapters, opportunity discovery, and full cross-platform analytics remain future work.
