@@ -106,6 +106,10 @@ Campaigns are a core domain, not a later add-on. Creator OS should store:
 
 A campaign with five required videos must visibly show completion progress and remaining work.
 
+### Brand deals
+
+Brand Deals is the commercial workspace for partnerships: contacts, contract and usage rights, exclusivity, compensation, invoices, payment status, and independently tracked deliverables. Campaigns remain the execution and scheduling layer. A deal can link to multiple existing campaigns, products, samples, and content records without copying or deleting those records, and campaigns may still exist without a deal.
+
 ### Sample workflow
 
 Sample tracking is a daily operational need.

@@ -3,6 +3,7 @@ export const navigation = [
   { href: "/calendar", label: "Calendar", shortLabel: "Calendar" },
   { href: "/create", label: "Create", shortLabel: "Create" },
   { href: "/campaigns", label: "Campaigns", shortLabel: "Campaigns" },
+  { href: "/brand-deals", label: "Brand Deals", shortLabel: "Deals" },
   { href: "/products", label: "Products", shortLabel: "Products" },
   { href: "/archive", label: "Archive", shortLabel: "Archive" },
   { href: "/analytics", label: "Analytics", shortLabel: "Analytics" },

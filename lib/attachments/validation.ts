@@ -3,11 +3,12 @@ import { createHash } from "node:crypto";
 export class AttachmentValidationError extends Error {}
 
 export function validatePdf(input: { filename: string; mimeType: string; bytes: Uint8Array }, maxBytes: number) {
-  if (!input.filename.toLowerCase().endsWith(".pdf")) throw new AttachmentValidationError("Only .pdf files are supported.");
-  if (input.mimeType !== "application/pdf") throw new AttachmentValidationError("The uploaded file must have the application/pdf content type.");
-  if (!input.bytes.length) throw new AttachmentValidationError("The PDF is empty.");
-  if (input.bytes.byteLength > maxBytes) throw new AttachmentValidationError(`The PDF exceeds the ${maxBytes}-byte upload limit.`);
-  if (new TextDecoder().decode(input.bytes.subarray(0, 5)) !== "%PDF-") throw new AttachmentValidationError("The file does not contain a valid PDF signature.");
+  const lower=input.filename.toLowerCase(),pdf=lower.endsWith(".pdf")&&input.mimeType==="application/pdf",png=lower.endsWith(".png")&&input.mimeType==="image/png",jpeg=(lower.endsWith(".jpg")||lower.endsWith(".jpeg"))&&input.mimeType==="image/jpeg";
+  if(!pdf&&!png&&!jpeg)throw new AttachmentValidationError("Only PDF, PNG, JPG, and JPEG files are supported.");
+  if (!input.bytes.length) throw new AttachmentValidationError("The file is empty.");
+  if (input.bytes.byteLength > maxBytes) throw new AttachmentValidationError(`The file exceeds the ${maxBytes}-byte upload limit.`);
+  const valid=pdf?new TextDecoder().decode(input.bytes.subarray(0,5))==="%PDF-":png?input.bytes.slice(0,8).every((b,i)=>b===[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a][i]):input.bytes[0]===0xff&&input.bytes[1]===0xd8&&input.bytes.at(-2)===0xff&&input.bytes.at(-1)===0xd9;
+  if(!valid)throw new AttachmentValidationError("The file signature does not match its type.");
   return createHash("sha256").update(input.bytes).digest("hex");
 }
 
@@ -28,7 +29,8 @@ export function validateVideo(input: { filename: string; mimeType: string; bytes
 export function safeDisplayFilename(value: string) {
   const name = value.replace(/[\\/\0\r\n]/g, " ").replace(/\s+/g, " ").trim();
   if (!name || name.length > 240) throw new AttachmentValidationError("Filename must be between 1 and 240 characters.");
-  return name.toLowerCase().endsWith(".pdf") ? name : `${name}.pdf`;
+  if(/\.(pdf|png|jpe?g)$/i.test(name))return name;
+  return `${name}.pdf`;
 }
 
 export function safeVideoFilename(value: string, mimeType: string) {

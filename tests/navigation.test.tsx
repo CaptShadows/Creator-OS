@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
 
 describe("Creator OS navigation", () => {
   it("defines all workflow-first destinations, including historical work", () => {
-    expect(navigation.map(({ label }) => label)).toEqual(["Overview", "Calendar", "Create", "Campaigns", "Products", "Archive", "Analytics", "Platforms"]);
+    expect(navigation.map(({ label }) => label)).toEqual(["Overview", "Calendar", "Create", "Campaigns", "Brand Deals", "Products", "Archive", "Analytics", "Platforms"]);
   });
 
   it("renders the application shell and its content", () => {

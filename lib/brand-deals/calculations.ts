@@ -1,0 +1,2 @@
+export function dealProgress(rows:{status:string;quantity:number}[]){const total=rows.reduce((n,r)=>n+r.quantity,0),completed=rows.filter(r=>["approved","posted","completed"].includes(r.status)).reduce((n,r)=>n+r.quantity,0);return{total,completed,percent:total?Math.round(completed/total*100):0}}
+export function outstanding(fixed:number|null,gifted:number|null,received:number){return Math.max(0,(fixed??0)-received)}

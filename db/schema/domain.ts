@@ -72,6 +72,38 @@ export const campaigns = pgTable("campaigns", {
   briefReference: text("brief_reference"), notes: text("notes"), ...timestamps,
 }, (table) => [index("campaigns_owner_status_due_idx").on(table.ownerUserId, table.status, table.dueAt)]);
 
+export const brandDeals = pgTable("brand_deals", {
+  id: uuid("id").primaryKey(),
+  ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  brandId: uuid("brand_id").references(() => brands.id, { onDelete: "set null" }),
+  title: text("title").notNull(), contactName: text("contact_name"), contactEmail: text("contact_email"),
+  source: text("source").default("other").notNull(), dealType: text("deal_type").default("paid").notNull(),
+  status: text("status").default("lead").notNull(), priority: integer("priority").default(1).notNull(),
+  startAt: timestamp("start_at", { withTimezone: true }), dueAt: timestamp("due_at", { withTimezone: true }), notes: text("notes"),
+  fixedCompensationCents: integer("fixed_compensation_cents"), giftedValueCents: integer("gifted_value_cents"),
+  currency: text("currency").default("USD").notNull(), commissionTerms: text("commission_terms"), paymentTerms: text("payment_terms"),
+  invoiceRequired: boolean("invoice_required").default(false).notNull(), invoiceNumber: text("invoice_number"), invoiceDate: timestamp("invoice_date", { withTimezone: true }),
+  paymentDueAt: timestamp("payment_due_at", { withTimezone: true }), paymentStatus: text("payment_status").default("not_due").notNull(),
+  amountReceivedCents: integer("amount_received_cents").default(0).notNull(), receivedAt: timestamp("received_at", { withTimezone: true }),
+  contractSigned: boolean("contract_signed").default(false).notNull(), contractSignedAt: timestamp("contract_signed_at", { withTimezone: true }),
+  usageRights: text("usage_rights"), organicRights: boolean("organic_rights").default(false).notNull(), paidUsage: boolean("paid_usage").default(false).notNull(),
+  exclusivityCategory: text("exclusivity_category"), exclusivityStartAt: timestamp("exclusivity_start_at", { withTimezone: true }), exclusivityEndAt: timestamp("exclusivity_end_at", { withTimezone: true }),
+  revisionRounds: integer("revision_rounds"), ownershipNotes: text("ownership_notes"), disclosures: text("disclosures"), referenceLinks: text("reference_links"),
+  ...timestamps,
+}, (table) => [index("brand_deals_owner_status_due_idx").on(table.ownerUserId, table.status, table.dueAt), index("brand_deals_owner_payment_idx").on(table.ownerUserId, table.paymentStatus, table.paymentDueAt)]);
+
+export const brandDealDeliverables = pgTable("brand_deal_deliverables", {
+  id: uuid("id").primaryKey(), ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  brandDealId: uuid("brand_deal_id").notNull().references(() => brandDeals.id, { onDelete: "restrict" }),
+  contentId: uuid("content_id").references(() => contents.id, { onDelete: "set null" }),
+  title: text("title").notNull(), deliverableType: text("deliverable_type"), platform: text("platform"), quantity: integer("quantity").default(1).notNull(),
+  dueAt: timestamp("due_at", { withTimezone: true }), status: text("status").default("not_started").notNull(), approvalStatus: text("approval_status").default("not_submitted").notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }), liveUrl: text("live_url"), notes: text("notes"), ...timestamps,
+}, (table) => [index("brand_deal_deliverables_owner_due_idx").on(table.ownerUserId, table.status, table.dueAt), index("brand_deal_deliverables_deal_idx").on(table.brandDealId)]);
+
+export const brandDealCampaigns = pgTable("brand_deal_campaigns", { ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }), brandDealId: uuid("brand_deal_id").notNull().references(() => brandDeals.id, { onDelete: "cascade" }), campaignId: uuid("campaign_id").notNull().references(() => campaigns.id, { onDelete: "cascade" }) }, (table) => [primaryKey({ columns: [table.brandDealId, table.campaignId] }), index("brand_deal_campaigns_owner_idx").on(table.ownerUserId)]);
+export const brandDealContents = pgTable("brand_deal_contents", { ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }), brandDealId: uuid("brand_deal_id").notNull().references(() => brandDeals.id, { onDelete: "cascade" }), contentId: uuid("content_id").notNull().references(() => contents.id, { onDelete: "cascade" }) }, (table) => [primaryKey({ columns: [table.brandDealId, table.contentId] }), index("brand_deal_contents_owner_idx").on(table.ownerUserId)]);
+
 export const deliverables = pgTable("deliverables", {
   id: uuid("id").primaryKey(), ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   campaignId: uuid("campaign_id").notNull().references(() => campaigns.id, { onDelete: "restrict" }),
@@ -140,6 +172,7 @@ export const attachmentLinks = pgTable("attachment_links", {
   deliverableId: uuid("deliverable_id").references(() => deliverables.id, { onDelete: "cascade" }),
   productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
   sampleId: uuid("sample_id").references(() => samples.id, { onDelete: "cascade" }),
+  brandDealId: uuid("brand_deal_id").references(() => brandDeals.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("attachment_links_attachment_idx").on(table.attachmentId),
@@ -149,6 +182,7 @@ export const attachmentLinks = pgTable("attachment_links", {
   index("attachment_links_deliverable_idx").on(table.deliverableId),
   index("attachment_links_product_idx").on(table.productId),
   index("attachment_links_sample_idx").on(table.sampleId),
+  index("attachment_links_brand_deal_idx").on(table.brandDealId),
 ]);
 
 export const integrationStates = pgTable("integration_states", {
@@ -167,6 +201,9 @@ export const contentProducts = pgTable("content_products", {
   contentId: uuid("content_id").notNull().references(() => contents.id, { onDelete: "cascade" }),
   productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
 }, (table) => [primaryKey({ columns: [table.contentId, table.productId] }), index("content_products_owner_idx").on(table.ownerUserId)]);
+
+export const brandDealProducts = pgTable("brand_deal_products", { ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }), brandDealId: uuid("brand_deal_id").notNull().references(() => brandDeals.id, { onDelete: "cascade" }), productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }) }, (table) => [primaryKey({ columns: [table.brandDealId, table.productId] }), index("brand_deal_products_owner_idx").on(table.ownerUserId)]);
+export const brandDealSamples = pgTable("brand_deal_samples", { ownerUserId: uuid("owner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }), brandDealId: uuid("brand_deal_id").notNull().references(() => brandDeals.id, { onDelete: "cascade" }), sampleId: uuid("sample_id").notNull().references(() => samples.id, { onDelete: "cascade" }) }, (table) => [primaryKey({ columns: [table.brandDealId, table.sampleId] }), index("brand_deal_samples_owner_idx").on(table.ownerUserId)]);
 
 export const platformAccountsRelations = relations(platformAccounts, ({ many }) => ({ publications: many(publications), productListings: many(productPlatformListings) }));
 export const contentsRelations = relations(contents, ({ many }) => ({ publications: many(publications), deliverables: many(deliverables), assets: many(assetReferences), campaignLinks: many(contentCampaigns), productLinks: many(contentProducts) }));
