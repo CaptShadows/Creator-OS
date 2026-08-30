@@ -43,6 +43,13 @@
       "when": 1788051193493,
       "tag": "0005_sloppy_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788054082728,
+      "tag": "0006_illegal_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

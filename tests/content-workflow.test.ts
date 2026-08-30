@@ -1,10 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { contentAutosaveSchema, pendingDraftKey, quickIdeaSchema } from "@/lib/content/contracts";
-import { canTransitionContent, nextContentStatus, previousContentStatus } from "@/lib/content/lifecycle";
+import {
+  contentAutosaveSchema,
+  pendingDraftKey,
+  quickIdeaSchema,
+} from "@/lib/content/contracts";
+import {
+  canTransitionContent,
+  nextContentStatus,
+  previousContentStatus,
+} from "@/lib/content/lifecycle";
 
 describe("Create content workflow", () => {
   it("captures an idea with one required freeform field", () => {
-    expect(quickIdeaSchema.parse({ idea: "Film a fall kitchen favorites reel" })).toEqual({ idea: "Film a fall kitchen favorites reel" });
+    expect(
+      quickIdeaSchema.parse({ idea: "Film a fall kitchen favorites reel" }),
+    ).toEqual({
+      idea: "Film a fall kitchen favorites reel",
+      priority: "medium",
+    });
     expect(() => quickIdeaSchema.parse({ idea: "   " })).toThrow();
   });
 
@@ -18,13 +31,29 @@ describe("Create content workflow", () => {
   });
 
   it("validates the authoritative autosave boundary", () => {
-    const valid = contentAutosaveSchema.parse({ title: "Fall favorites", concept: null, hook: "Start here", script: "Body", caption: null, notes: null, contentType: "reel", contentPillar: "lifestyle", baseUpdatedAt: "2026-08-12T00:00:00.000Z" });
+    const valid = contentAutosaveSchema.parse({
+      title: "Fall favorites",
+      concept: null,
+      hook: "Start here",
+      script: "Body",
+      caption: null,
+      notes: null,
+      contentType: "reel",
+      contentPillar: "lifestyle",
+      baseUpdatedAt: "2026-08-12T00:00:00.000Z",
+    });
     expect(valid.title).toBe("Fall favorites");
-    expect(() => contentAutosaveSchema.parse({ ...valid, title: "" })).toThrow();
+    expect(() =>
+      contentAutosaveSchema.parse({ ...valid, title: "" }),
+    ).toThrow();
   });
 
   it("scopes pending browser buffers by owner and content", () => {
-    expect(pendingDraftKey("owner-a", "content-1")).not.toBe(pendingDraftKey("owner-b", "content-1"));
-    expect(pendingDraftKey("owner-a", "content-1")).not.toBe(pendingDraftKey("owner-a", "content-2"));
+    expect(pendingDraftKey("owner-a", "content-1")).not.toBe(
+      pendingDraftKey("owner-b", "content-1"),
+    );
+    expect(pendingDraftKey("owner-a", "content-1")).not.toBe(
+      pendingDraftKey("owner-a", "content-2"),
+    );
   });
 });

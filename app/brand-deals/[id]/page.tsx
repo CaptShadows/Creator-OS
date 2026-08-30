@@ -277,12 +277,23 @@ export default async function Page({
       <SurfaceCard>
         <h2 className="display-heading text-2xl">Linked work</h2>
         <div className="mt-5 grid gap-5 md:grid-cols-2">
-          {(["campaign", "product", "sample", "content"] as const).map(
-            (type) => (
+          {(
+            [
+              { type: "campaign", label: "Campaigns" },
+              { type: "product", label: "Products / Samples" },
+              { type: "content", label: "Content" },
+            ] as const
+          ).map(({ type, label }) => {
+            const linkedNames = [
+              ...w[`${type}s`].map((x) => x.name),
+              ...(type === "product" ? w.samples.map((x) => x.name) : []),
+            ];
+            const linkedSummary = [...new Set(linkedNames)].join(", ");
+            return (
               <div key={type} className="min-w-0">
-                <h3 className="font-bold capitalize">{type}s</h3>
+                <h3 className="font-bold">{label}</h3>
                 <p className="my-2 truncate text-sm text-[var(--muted)]">
-                  {w[`${type}s`].map((x) => x.name).join(", ") || "None linked"}
+                  {linkedSummary || "None linked"}
                 </p>
                 <form
                   action={linkDealEntityAction}
@@ -307,8 +318,8 @@ export default async function Page({
                   </button>
                 </form>
               </div>
-            ),
-          )}
+            );
+          })}
         </div>
       </SurfaceCard>
       <AttachmentPanel
