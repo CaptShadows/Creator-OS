@@ -1,2 +1,55 @@
-import{describe,expect,it}from"vitest";import{defaultOverviewLayout,moveVisibleWidget,sanitizeOverviewLayout}from"@/lib/overview/layout";
-describe("overview layouts",()=>{it("drops unknown and duplicate widgets and preserves new widgets as hidden",()=>{const result=sanitizeOverviewLayout([{id:"film",size:"large",visible:true},{id:"retired",size:"small"},{id:"film",size:"small"}],"desktop");expect(result.filter(x=>x.id==="film")).toHaveLength(1);expect(result.some(x=>x.id==="payments"&&!x.visible)).toBe(true)});it("constrains mobile tiles to readable full width",()=>expect(sanitizeOverviewLayout([{id:"film",size:"small",visible:true}],"mobile")[0].size).toBe("large"));it("moves among visible tiles without hidden tiles intercepting the move",()=>{const layout=sanitizeOverviewLayout([{id:"film",size:"medium",visible:true},{id:"due",size:"medium",visible:false},{id:"samples",size:"medium",visible:true}],"desktop"),moved=moveVisibleWidget(layout,"samples",-1);expect(moved.filter(x=>x.visible).map(x=>x.id).slice(0,2)).toEqual(["samples","film"])});it("provides independent default copies",()=>{const a=defaultOverviewLayout("desktop"),b=defaultOverviewLayout("desktop");a[0].visible=false;expect(b[0].visible).toBe(true)})});
+import { describe, expect, it } from "vitest";
+import {
+  defaultOverviewLayout,
+  moveVisibleWidget,
+  sanitizeOverviewLayout,
+} from "@/lib/overview/layout";
+describe("overview layouts", () => {
+  it("drops unknown and duplicate widgets and preserves new widgets as hidden", () => {
+    const result = sanitizeOverviewLayout(
+      [
+        { id: "film", size: "large", visible: true },
+        { id: "retired", size: "small" },
+        { id: "film", size: "small" },
+      ],
+      "desktop",
+    );
+    expect(result.filter((x) => x.id === "film")).toHaveLength(1);
+    expect(result.some((x) => x.id === "payments" && !x.visible)).toBe(true);
+  });
+  it("constrains mobile tiles to readable full width", () =>
+    expect(
+      sanitizeOverviewLayout(
+        [{ id: "film", size: "small", visible: true }],
+        "mobile",
+      )[0].size,
+    ).toBe("large"));
+  it("moves among visible tiles without hidden tiles intercepting the move", () => {
+    const layout = sanitizeOverviewLayout(
+        [
+          { id: "film", size: "medium", visible: true },
+          { id: "due", size: "medium", visible: false },
+          { id: "samples", size: "medium", visible: true },
+        ],
+        "desktop",
+      ),
+      moved = moveVisibleWidget(layout, "samples", -1);
+    expect(
+      moved
+        .filter((x) => x.visible)
+        .map((x) => x.id)
+        .slice(0, 2),
+    ).toEqual(["samples", "film"]);
+  });
+  it("provides independent default copies", () => {
+    const a = defaultOverviewLayout("desktop"),
+      b = defaultOverviewLayout("desktop");
+    a[0].visible = false;
+    expect(b[0].visible).toBe(true);
+  });
+  it("offers Brand Deal tiles without changing existing dashboards", () => {
+    const layout = defaultOverviewLayout("desktop");
+    expect(layout.filter((item) => item.id.startsWith("brand-deal"))).toHaveLength(4);
+    expect(layout.filter((item) => item.id.startsWith("brand-deal")).every((item) => !item.visible)).toBe(true);
+  });
+});

@@ -1,16 +1,367 @@
-import "server-only";import { randomUUID } from "node:crypto";import { and,eq,gte,lt,or,asc,isNull } from "drizzle-orm";import { getDatabase } from "@/db/client";import { auditEvents,campaigns,contents,deliverables,platformAccounts,publications } from "@/db/schema";
-export type CalendarFilters={platformAccountId?:string;campaignId?:string;contentStatus?:string};
-export async function getCalendarProjection(ownerUserId:string,start:Date,end:Date,filters:CalendarFilters){const db=getDatabase().db;const [contentRows,campaignRows,deliverableRows,publicationRows,accounts,campaignOptions,contentOptions]=await Promise.all([
-db.select().from(contents).where(and(eq(contents.ownerUserId,ownerUserId),isNull(contents.archivedAt),gte(contents.plannedFilmAt,start),lt(contents.plannedFilmAt,end),filters.contentStatus?eq(contents.status,filters.contentStatus as typeof contents.$inferSelect.status):undefined)).orderBy(asc(contents.plannedFilmAt)),
-db.select().from(campaigns).where(and(eq(campaigns.ownerUserId,ownerUserId),isNull(campaigns.archivedAt),or(and(lt(campaigns.startAt,end),gte(campaigns.dueAt,start)),and(isNull(campaigns.startAt),gte(campaigns.dueAt,start),lt(campaigns.dueAt,end))),filters.campaignId?eq(campaigns.id,filters.campaignId):undefined)).orderBy(asc(campaigns.dueAt)),
-db.select().from(deliverables).where(and(eq(deliverables.ownerUserId,ownerUserId),gte(deliverables.dueAt,start),lt(deliverables.dueAt,end),filters.campaignId?eq(deliverables.campaignId,filters.campaignId):undefined)).orderBy(asc(deliverables.dueAt)),
-db.select({publication:publications,contentTitle:contents.title,accountName:platformAccounts.displayName,platform:platformAccounts.platform}).from(publications).innerJoin(contents,eq(publications.contentId,contents.id)).innerJoin(platformAccounts,eq(publications.platformAccountId,platformAccounts.id)).where(and(eq(publications.ownerUserId,ownerUserId),or(and(gte(publications.scheduledAt,start),lt(publications.scheduledAt,end)),and(gte(publications.publishedAt,start),lt(publications.publishedAt,end))),filters.platformAccountId?eq(publications.platformAccountId,filters.platformAccountId):undefined,filters.contentStatus?eq(contents.status,filters.contentStatus as typeof contents.$inferSelect.status):undefined)).orderBy(asc(publications.scheduledAt)),
-db.select({id:platformAccounts.id,name:platformAccounts.displayName,platform:platformAccounts.platform}).from(platformAccounts).where(and(eq(platformAccounts.ownerUserId,ownerUserId),isNull(platformAccounts.archivedAt))),db.select({id:campaigns.id,name:campaigns.name}).from(campaigns).where(and(eq(campaigns.ownerUserId,ownerUserId),isNull(campaigns.archivedAt))),db.select({id:contents.id,name:contents.title}).from(contents).where(and(eq(contents.ownerUserId,ownerUserId),isNull(contents.archivedAt))) ]);return{contentRows,campaignRows,deliverableRows,publicationRows,accounts,campaignOptions,contentOptions};}
-export async function scheduleFilm(owner:string,id:string,date:Date){const rows=await getDatabase().db.update(contents).set({plannedFilmAt:date,updatedAt:new Date()}).where(and(eq(contents.ownerUserId,owner),eq(contents.id,id),isNull(contents.archivedAt))).returning({id:contents.id});return rows.length>0;}
-export async function schedulePublication(owner:string,contentId:string,accountId:string,date:Date){const db=getDatabase().db;const [content,account]=await Promise.all([db.select({id:contents.id}).from(contents).where(and(eq(contents.ownerUserId,owner),eq(contents.id,contentId),isNull(contents.archivedAt))).limit(1),db.select({id:platformAccounts.id}).from(platformAccounts).where(and(eq(platformAccounts.ownerUserId,owner),eq(platformAccounts.id,accountId),eq(platformAccounts.active,true),isNull(platformAccounts.archivedAt))).limit(1)]);if(!content[0]||!account[0])return false;const [existing]=await db.select().from(publications).where(and(eq(publications.ownerUserId,owner),eq(publications.contentId,contentId),eq(publications.platformAccountId,accountId),eq(publications.status,"draft"))).limit(1);if(existing)await db.update(publications).set({scheduledAt:date,status:"scheduled",updatedAt:new Date()}).where(and(eq(publications.ownerUserId,owner),eq(publications.id,existing.id)));else await db.insert(publications).values({id:crypto.randomUUID(),ownerUserId:owner,contentId,platformAccountId:accountId,status:"scheduled",scheduledAt:date});return true;}
-export async function reschedulePublication(owner:string,id:string,date:Date){await getDatabase().db.update(publications).set({scheduledAt:date,updatedAt:new Date()}).where(and(eq(publications.ownerUserId,owner),eq(publications.id,id)));}
-export async function permanentlyDeletePublication(owner:string,id:string){const db=getDatabase().db;const [row]=await db.select().from(publications).where(and(eq(publications.ownerUserId,owner),eq(publications.id,id))).limit(1);if(!row||row.status==="posted"||row.status==="published"||row.publishedAt)return false;return db.transaction(async tx=>{await tx.delete(publications).where(and(eq(publications.ownerUserId,owner),eq(publications.id,id)));await tx.insert(auditEvents).values({id:randomUUID(),actorUserId:owner,eventType:"publication.permanently_deleted",entityType:"publication",entityId:id,metadata:{confirmation:"two_step"}});return true})}
-export async function clearFilmDate(owner:string,id:string){const rows=await getDatabase().db.update(contents).set({plannedFilmAt:null,updatedAt:new Date()}).where(and(eq(contents.ownerUserId,owner),eq(contents.id,id))).returning({id:contents.id});return rows.length>0}
-export async function clearCampaignDeadline(owner:string,id:string){const rows=await getDatabase().db.update(campaigns).set({dueAt:null,updatedAt:new Date()}).where(and(eq(campaigns.ownerUserId,owner),eq(campaigns.id,id))).returning({id:campaigns.id});return rows.length>0}
-export async function clearDeliverableDeadline(owner:string,id:string){const rows=await getDatabase().db.update(deliverables).set({dueAt:null,updatedAt:new Date()}).where(and(eq(deliverables.ownerUserId,owner),eq(deliverables.id,id))).returning({id:deliverables.id});return rows.length>0}
-export async function unschedulePublication(owner:string,id:string){const db=getDatabase().db;const [row]=await db.select().from(publications).where(and(eq(publications.ownerUserId,owner),eq(publications.id,id))).limit(1);if(!row||row.publishedAt||row.status==="posted"||row.status==="published")return false;await db.update(publications).set({status:"draft",scheduledAt:null,updatedAt:new Date()}).where(and(eq(publications.ownerUserId,owner),eq(publications.id,id)));return true}
+import "server-only";
+import { randomUUID } from "node:crypto";
+import { and, eq, gte, lt, or, asc, isNull } from "drizzle-orm";
+import { getDatabase } from "@/db/client";
+import {
+  auditEvents,
+  brandDealDeliverables,
+  brandDeals,
+  campaigns,
+  contents,
+  deliverables,
+  platformAccounts,
+  publications,
+} from "@/db/schema";
+export type CalendarFilters = {
+  platformAccountId?: string;
+  campaignId?: string;
+  contentStatus?: string;
+};
+export async function getCalendarProjection(
+  ownerUserId: string,
+  start: Date,
+  end: Date,
+  filters: CalendarFilters,
+) {
+  const db = getDatabase().db;
+  const [
+    contentRows,
+    campaignRows,
+    deliverableRows,
+    publicationRows,
+    accounts,
+    campaignOptions,
+    contentOptions,
+    brandDealRows,
+    brandDealDeliverableRows,
+  ] = await Promise.all([
+    db
+      .select()
+      .from(contents)
+      .where(
+        and(
+          eq(contents.ownerUserId, ownerUserId),
+          isNull(contents.archivedAt),
+          gte(contents.plannedFilmAt, start),
+          lt(contents.plannedFilmAt, end),
+          filters.contentStatus
+            ? eq(
+                contents.status,
+                filters.contentStatus as typeof contents.$inferSelect.status,
+              )
+            : undefined,
+        ),
+      )
+      .orderBy(asc(contents.plannedFilmAt)),
+    db
+      .select()
+      .from(campaigns)
+      .where(
+        and(
+          eq(campaigns.ownerUserId, ownerUserId),
+          isNull(campaigns.archivedAt),
+          or(
+            and(lt(campaigns.startAt, end), gte(campaigns.dueAt, start)),
+            and(
+              isNull(campaigns.startAt),
+              gte(campaigns.dueAt, start),
+              lt(campaigns.dueAt, end),
+            ),
+          ),
+          filters.campaignId ? eq(campaigns.id, filters.campaignId) : undefined,
+        ),
+      )
+      .orderBy(asc(campaigns.dueAt)),
+    db
+      .select()
+      .from(deliverables)
+      .where(
+        and(
+          eq(deliverables.ownerUserId, ownerUserId),
+          gte(deliverables.dueAt, start),
+          lt(deliverables.dueAt, end),
+          filters.campaignId
+            ? eq(deliverables.campaignId, filters.campaignId)
+            : undefined,
+        ),
+      )
+      .orderBy(asc(deliverables.dueAt)),
+    db
+      .select({
+        publication: publications,
+        contentTitle: contents.title,
+        accountName: platformAccounts.displayName,
+        platform: platformAccounts.platform,
+      })
+      .from(publications)
+      .innerJoin(contents, eq(publications.contentId, contents.id))
+      .innerJoin(
+        platformAccounts,
+        eq(publications.platformAccountId, platformAccounts.id),
+      )
+      .where(
+        and(
+          eq(publications.ownerUserId, ownerUserId),
+          or(
+            and(
+              gte(publications.scheduledAt, start),
+              lt(publications.scheduledAt, end),
+            ),
+            and(
+              gte(publications.publishedAt, start),
+              lt(publications.publishedAt, end),
+            ),
+          ),
+          filters.platformAccountId
+            ? eq(publications.platformAccountId, filters.platformAccountId)
+            : undefined,
+          filters.contentStatus
+            ? eq(
+                contents.status,
+                filters.contentStatus as typeof contents.$inferSelect.status,
+              )
+            : undefined,
+        ),
+      )
+      .orderBy(asc(publications.scheduledAt)),
+    db
+      .select({
+        id: platformAccounts.id,
+        name: platformAccounts.displayName,
+        platform: platformAccounts.platform,
+      })
+      .from(platformAccounts)
+      .where(
+        and(
+          eq(platformAccounts.ownerUserId, ownerUserId),
+          isNull(platformAccounts.archivedAt),
+        ),
+      ),
+    db
+      .select({ id: campaigns.id, name: campaigns.name })
+      .from(campaigns)
+      .where(
+        and(
+          eq(campaigns.ownerUserId, ownerUserId),
+          isNull(campaigns.archivedAt),
+        ),
+      ),
+    db
+      .select({ id: contents.id, name: contents.title })
+      .from(contents)
+      .where(
+        and(eq(contents.ownerUserId, ownerUserId), isNull(contents.archivedAt)),
+      ),
+    filters.campaignId
+      ? Promise.resolve([])
+      : db
+          .select()
+          .from(brandDeals)
+          .where(
+            and(
+              eq(brandDeals.ownerUserId, ownerUserId),
+              isNull(brandDeals.archivedAt),
+              or(
+                and(lt(brandDeals.startAt, end), gte(brandDeals.dueAt, start)),
+                and(
+                  isNull(brandDeals.startAt),
+                  gte(brandDeals.dueAt, start),
+                  lt(brandDeals.dueAt, end),
+                ),
+              ),
+            ),
+          )
+          .orderBy(asc(brandDeals.dueAt)),
+    filters.campaignId
+      ? Promise.resolve([])
+      : db
+          .select()
+          .from(brandDealDeliverables)
+          .where(
+            and(
+              eq(brandDealDeliverables.ownerUserId, ownerUserId),
+              gte(brandDealDeliverables.dueAt, start),
+              lt(brandDealDeliverables.dueAt, end),
+            ),
+          )
+          .orderBy(asc(brandDealDeliverables.dueAt)),
+  ]);
+  return {
+    contentRows,
+    campaignRows,
+    deliverableRows,
+    publicationRows,
+    accounts,
+    campaignOptions,
+    contentOptions,
+    brandDealRows,
+    brandDealDeliverableRows,
+  };
+}
+export async function scheduleFilm(owner: string, id: string, date: Date) {
+  const rows = await getDatabase()
+    .db.update(contents)
+    .set({ plannedFilmAt: date, updatedAt: new Date() })
+    .where(
+      and(
+        eq(contents.ownerUserId, owner),
+        eq(contents.id, id),
+        isNull(contents.archivedAt),
+      ),
+    )
+    .returning({ id: contents.id });
+  return rows.length > 0;
+}
+export async function schedulePublication(
+  owner: string,
+  contentId: string,
+  accountId: string,
+  date: Date,
+) {
+  const db = getDatabase().db;
+  const [content, account] = await Promise.all([
+    db
+      .select({ id: contents.id })
+      .from(contents)
+      .where(
+        and(
+          eq(contents.ownerUserId, owner),
+          eq(contents.id, contentId),
+          isNull(contents.archivedAt),
+        ),
+      )
+      .limit(1),
+    db
+      .select({ id: platformAccounts.id })
+      .from(platformAccounts)
+      .where(
+        and(
+          eq(platformAccounts.ownerUserId, owner),
+          eq(platformAccounts.id, accountId),
+          eq(platformAccounts.active, true),
+          isNull(platformAccounts.archivedAt),
+        ),
+      )
+      .limit(1),
+  ]);
+  if (!content[0] || !account[0]) return false;
+  const [existing] = await db
+    .select()
+    .from(publications)
+    .where(
+      and(
+        eq(publications.ownerUserId, owner),
+        eq(publications.contentId, contentId),
+        eq(publications.platformAccountId, accountId),
+        eq(publications.status, "draft"),
+      ),
+    )
+    .limit(1);
+  if (existing)
+    await db
+      .update(publications)
+      .set({ scheduledAt: date, status: "scheduled", updatedAt: new Date() })
+      .where(
+        and(
+          eq(publications.ownerUserId, owner),
+          eq(publications.id, existing.id),
+        ),
+      );
+  else
+    await db
+      .insert(publications)
+      .values({
+        id: crypto.randomUUID(),
+        ownerUserId: owner,
+        contentId,
+        platformAccountId: accountId,
+        status: "scheduled",
+        scheduledAt: date,
+      });
+  return true;
+}
+export async function reschedulePublication(
+  owner: string,
+  id: string,
+  date: Date,
+) {
+  await getDatabase()
+    .db.update(publications)
+    .set({ scheduledAt: date, updatedAt: new Date() })
+    .where(and(eq(publications.ownerUserId, owner), eq(publications.id, id)));
+}
+export async function permanentlyDeletePublication(owner: string, id: string) {
+  const db = getDatabase().db;
+  const [row] = await db
+    .select()
+    .from(publications)
+    .where(and(eq(publications.ownerUserId, owner), eq(publications.id, id)))
+    .limit(1);
+  if (
+    !row ||
+    row.status === "posted" ||
+    row.status === "published" ||
+    row.publishedAt
+  )
+    return false;
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(publications)
+      .where(and(eq(publications.ownerUserId, owner), eq(publications.id, id)));
+    await tx
+      .insert(auditEvents)
+      .values({
+        id: randomUUID(),
+        actorUserId: owner,
+        eventType: "publication.permanently_deleted",
+        entityType: "publication",
+        entityId: id,
+        metadata: { confirmation: "two_step" },
+      });
+    return true;
+  });
+}
+export async function clearFilmDate(owner: string, id: string) {
+  const rows = await getDatabase()
+    .db.update(contents)
+    .set({ plannedFilmAt: null, updatedAt: new Date() })
+    .where(and(eq(contents.ownerUserId, owner), eq(contents.id, id)))
+    .returning({ id: contents.id });
+  return rows.length > 0;
+}
+export async function clearCampaignDeadline(owner: string, id: string) {
+  const rows = await getDatabase()
+    .db.update(campaigns)
+    .set({ dueAt: null, updatedAt: new Date() })
+    .where(and(eq(campaigns.ownerUserId, owner), eq(campaigns.id, id)))
+    .returning({ id: campaigns.id });
+  return rows.length > 0;
+}
+export async function clearDeliverableDeadline(owner: string, id: string) {
+  const rows = await getDatabase()
+    .db.update(deliverables)
+    .set({ dueAt: null, updatedAt: new Date() })
+    .where(and(eq(deliverables.ownerUserId, owner), eq(deliverables.id, id)))
+    .returning({ id: deliverables.id });
+  return rows.length > 0;
+}
+export async function unschedulePublication(owner: string, id: string) {
+  const db = getDatabase().db;
+  const [row] = await db
+    .select()
+    .from(publications)
+    .where(and(eq(publications.ownerUserId, owner), eq(publications.id, id)))
+    .limit(1);
+  if (
+    !row ||
+    row.publishedAt ||
+    row.status === "posted" ||
+    row.status === "published"
+  )
+    return false;
+  await db
+    .update(publications)
+    .set({ status: "draft", scheduledAt: null, updatedAt: new Date() })
+    .where(and(eq(publications.ownerUserId, owner), eq(publications.id, id)));
+  return true;
+}
