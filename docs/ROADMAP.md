@@ -2,6 +2,21 @@
 
 This roadmap is capability-based. Dates should be added only when there is a real delivery constraint.
 
+## Implementation status — audited August 30, 2026
+
+Phase 1 is deployed on the Windows production host. Issues #2–#12 are complete, including the application foundation, PostgreSQL/authentication, canonical domain model, responsive client profiles, Create workflow, campaigns/payments, products/samples, calendar, Overview command center, platform placeholders, and tested deployment/backup/restore/rollback procedures.
+
+Additional delivered capabilities:
+
+- configurable Overview layouts (#30)
+- authenticated host-backed attachments (#23)
+- PDF, PNG, JPG, and JPEG uploads with safe remote redirects (#68, #76, #80, #81)
+- content/product priorities and priority-ordered Samples Needing Action (#71, #76–#79)
+- Brand Deals core workspace (#70, #74–#75); calendar, Overview-summary, and selective migration criteria remain open in #70
+- confirmed deletion, duplicate warnings, archive/recovery, account settings, Windows desktop shortcut, and background deployment
+
+Live external platform adapters, opportunity discovery, and full cross-platform analytics remain future work.
+
 ## Phase 0 — Workflow validation
 
 Completed enough to move forward.
@@ -281,9 +296,11 @@ External specialist handoffs are acceptable for tasks such as advanced video/ima
 - Calendar
 - Create
 - Campaigns
-- Products
+- Brand Deals
+- Products & Samples
 - Analytics
 - Platforms
+- Account
 
 Platforms contains specialized views for Instagram, Facebook, TikTok, YouTube, Amazon, ShopMy, and Tribe.
 
