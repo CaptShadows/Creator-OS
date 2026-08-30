@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AttachmentValidationError,
+  isValidAttachmentStorageKey,
   normalizeAttachmentMime,
   safeDisplayFilename,
   safeVideoFilename,
@@ -69,6 +70,11 @@ describe("PDF attachment validation", () => {
     expect(normalizeAttachmentMime("photo.jpeg", "image/pjpeg")).toBe("image/jpeg");
     expect(normalizeAttachmentMime("photo.jpg", "application/octet-stream")).toBe("image/jpeg");
     expect(normalizeAttachmentMime("photo.jpg", "")).toBe("image/jpeg");
+  });
+  it("allows supported image extensions in safe storage keys", () => {
+    expect(isValidAttachmentStorageKey("550e8400-e29b-41d4-a716-446655440000.jpg")).toBe(true);
+    expect(isValidAttachmentStorageKey("550e8400-e29b-41d4-a716-446655440000.png")).toBe(true);
+    expect(isValidAttachmentStorageKey("../unsafe.jpg")).toBe(false);
   });
   it("uses a relative redirect and never exposes the bind address", () => {
     const response = attachmentRedirect(
