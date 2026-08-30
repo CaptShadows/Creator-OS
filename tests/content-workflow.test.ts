@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { contentAutosaveSchema, pendingDraftKey, quickIdeaSchema } from "@/lib/content/contracts";
+import { contentAutosaveSchema, contentPriorityUpdateSchema, pendingDraftKey, quickIdeaSchema } from "@/lib/content/contracts";
 import { canTransitionContent, nextContentStatus, previousContentStatus } from "@/lib/content/lifecycle";
+import { contentPriorityLabels, priorityFromScore, priorityScore } from "@/lib/content/priority";
 
 describe("Create content workflow", () => {
-  it("captures an idea with one required freeform field", () => {
-    expect(quickIdeaSchema.parse({ idea: "Film a fall kitchen favorites reel" })).toEqual({ idea: "Film a fall kitchen favorites reel" });
+  it("captures an idea with a Medium default and accepts explicit priorities", () => {
+    expect(quickIdeaSchema.parse({ idea: "Film a fall kitchen favorites reel" })).toEqual({ idea: "Film a fall kitchen favorites reel", priority: "medium" });
+    expect(quickIdeaSchema.parse({ idea: "Urgent sponsored post", priority: "high" }).priority).toBe("high");
     expect(() => quickIdeaSchema.parse({ idea: "   " })).toThrow();
+    expect(() => quickIdeaSchema.parse({ idea: "Test", priority: "urgent" })).toThrow();
+  });
+
+  it("maps typed priority values to deterministic stored scores", () => {
+    expect(priorityScore("high")).toBe(3);
+    expect(priorityScore("medium")).toBe(2);
+    expect(priorityScore("low")).toBe(1);
+    expect(priorityFromScore(0)).toBe("low");
+    expect(priorityFromScore(2)).toBe("medium");
+    expect(contentPriorityLabels.high).toBe("High priority");
+    expect(contentPriorityUpdateSchema.parse({contentId:"00000000-0000-4000-8000-000000000001",priority:"low"}).priority).toBe("low");
   });
 
   it("permits only explicit adjacent lifecycle transitions", () => {
